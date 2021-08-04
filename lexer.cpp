@@ -29,8 +29,10 @@ std::vector<Token> Lexer::lex()
     while (true) {
         c = file.peek();
 
-        if (file.eof())
+        if (file.eof()) {
+            tokens.push_back(Token(TokenType::END_OF_FILE, "EOF"));
             break;
+        }
 
         switch (c) {
 
@@ -72,7 +74,7 @@ std::vector<Token> Lexer::lex()
         default:
             if (isdigit(c)) {
                 current = integer_literal();
-                tokens.push_back(Token(TokenType::INT, current));
+                tokens.push_back(Token(TokenType::INTEGER_LITERAL, current));
                 current = "";
             } else {
                 current = identifier();

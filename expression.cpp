@@ -1,6 +1,6 @@
 #include "expression.h"
 
-Expression::Expression()
+Expression::Expression(Literal* literal) : value(literal)
 {
 
 }

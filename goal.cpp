@@ -1,6 +1,6 @@
 #include "goal.h"
 
-Goal::Goal()
+Goal::Goal(Function* f)
 {
-
+    func = f;
 }

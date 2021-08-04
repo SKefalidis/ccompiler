@@ -1,7 +1,9 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include <unordered_map>
 #include <string>
+
 
 enum class TokenType {
     LBRACE,
@@ -13,7 +15,12 @@ enum class TokenType {
     INT,
     IDENTIFIER,
     INTEGER_LITERAL,
+
+    END_OF_FILE,
+    INVALID
 };
+
+extern std::unordered_map<TokenType, std::string> tokenTypeStrings;
 
 struct Token
 {
