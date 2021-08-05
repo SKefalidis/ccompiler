@@ -9,8 +9,8 @@ class Function
 {
 public:
     Function(std::string name, Statement* stm);
+    void accept(Visitor* v);
 
-private:
     Statement* stm;
     std::string name;
 };

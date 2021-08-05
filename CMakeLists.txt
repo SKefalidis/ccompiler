@@ -16,4 +16,6 @@ add_executable(ccompiler
     expression.h expression.cpp
     return.h return.cpp
     literal.h literal.cpp
+    visitor.h
+    generatorvisitor.h generatorvisitor.cpp
     )

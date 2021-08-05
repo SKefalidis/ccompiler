@@ -2,14 +2,15 @@
 #define GOAL_H
 
 #include "function.h"
+#include "visitor.h"
 
 
 class Goal
 {
 public:
     Goal(Function* f);
+    void accept(Visitor* v);
 
-private:
     Function* func;
 };
 

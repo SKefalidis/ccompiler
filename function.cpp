@@ -5,3 +5,8 @@ Function::Function(std::string name, Statement* stm)
 {
 
 }
+
+void Function::accept(Visitor* v)
+{
+    v->visit(this);
+}
