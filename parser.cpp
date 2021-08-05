@@ -1,3 +1,4 @@
+#include <iostream>
 #include "parser.h"
 
 Parser::Parser(std::vector<Token> tokens) : tokens(tokens)
@@ -27,6 +28,7 @@ Token Parser::consume_and_check(TokenType expected)
 
 void Parser::parse_error(std::string error)
 {
+    std::cerr << "Expected '" + error + "'" << std::endl;
     throw "Expected '" + error + "'";
 }
 
