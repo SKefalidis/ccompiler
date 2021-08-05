@@ -11,8 +11,13 @@ enum class TokenType {
     LPAREN,
     RPAREN,
     SEMICOLON,
+    MINUS,
+    COMPLEMENT,
+    NEGATION,
+
     RETURN,
     INT,
+
     IDENTIFIER,
     INTEGER_LITERAL,
 

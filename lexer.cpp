@@ -56,6 +56,18 @@ std::vector<Token> Lexer::lex()
             consume();
             tokens.push_back(Token(TokenType::SEMICOLON, ";"));
             break;
+        case '-':
+            consume();
+            tokens.push_back(Token(TokenType::MINUS, "-"));
+            break;
+        case '~':
+            consume();
+            tokens.push_back(Token(TokenType::COMPLEMENT, "~"));
+            break;
+        case '!':
+            consume();
+            tokens.push_back(Token(TokenType::NEGATION, "!"));
+            break;
 
         case ' ':
             column++;
