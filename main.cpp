@@ -42,7 +42,7 @@ int main(int argc, char** argv)
         wait(&status);
     }
 
-    remove("assembly.s");
+//    remove("assembly.s");
 
     return 0;
 }

@@ -12,6 +12,7 @@
 #include "literal.h"
 #include "return.h"
 #include "statement.h"
+#include "unaryoperator.h"
 
 
 class Parser
@@ -26,9 +27,10 @@ private:
     Token consume_and_check(TokenType expected);
     void parse_error(std::string error);
 
-    Expression* exp();
-    Function* func();
-    Statement* stm();
+    Expression*     exp();
+    Function*       func();
+    Statement*      stm();
+    UnaryOperator*  unary_op();
 
     std::vector<Token> tokens;
     int current_token;

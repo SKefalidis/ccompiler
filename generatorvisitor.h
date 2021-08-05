@@ -12,11 +12,12 @@ class GeneratorVisitor : public Visitor
 public:
     GeneratorVisitor(std::ofstream& stream);
 
-    void visit(Expression*  expr)  override;
-    void visit(Function*    func)  override;
-    void visit(Goal*        goal)  override;
-    void visit(Literal*     lit)   override;
-    void visit(Statement*   stm)   override;
+    void visit(Expression*      expr)  override;
+    void visit(Function*        func)  override;
+    void visit(Goal*            goal)  override;
+    void visit(Literal*         lit)   override;
+    void visit(Statement*       stm)   override;
+    void visit(UnaryOperator*   op)    override;
 
 private:
     std::ofstream& output;

@@ -49,12 +49,25 @@ Goal* Parser::parse()
 Expression* Parser::exp()
 {
     Expression* e;
-    Token t = consume_and_check(TokenType::INTEGER_LITERAL);
-    if (t.type == TokenType::INVALID) {
+    if (peek().type == TokenType::INTEGER_LITERAL) {
+        Token t = consume_and_check(TokenType::INTEGER_LITERAL);
+        if (t.type == TokenType::INVALID) {
+            return NULL;
+        }
+
+        e = new Expression(new IntLiteral(t.value));
+        nodes.push(e);
+    } else if (unary_op() && exp()) {
+        Expression* inner_expr = static_cast<Expression*>(nodes.top());
+        nodes.pop();
+        UnaryOperator* op = static_cast<UnaryOperator*>(nodes.top());
+        nodes.pop();
+
+        e = new Expression(op, inner_expr);
+        nodes.push(e);
+    } else {
         return NULL;
     }
-    e = new Expression(new IntLiteral(t.value));
-    nodes.push(e);
     return e;
 }
 
@@ -92,4 +105,19 @@ Statement* Parser::stm()
     }
     consume_and_check(TokenType::SEMICOLON);
     return s;
+}
+
+UnaryOperator* Parser::unary_op()
+{
+    UnaryOperator* op;
+    auto type = peek().type;
+    if (type == TokenType::COMPLEMENT || type == TokenType::MINUS || type == TokenType::NEGATION) {
+        Token t = consume();
+        op = new UnaryOperator(t);
+        nodes.push(op);
+    } else {
+        parse_error("Unary Operator");
+        return NULL;
+    }
+    return op;
 }

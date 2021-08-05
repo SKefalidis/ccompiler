@@ -12,7 +12,27 @@ GeneratorVisitor::GeneratorVisitor(std::ofstream& stream) : output(stream)
 
 void GeneratorVisitor::visit(Expression* expr)
 {
-    expr->value->accept(this);
+    if (expr->value) {
+        expr->value->accept(this);
+        std::string constant = results.top();
+        results.pop();
+        output << "\tmovl\t" << "$" << constant << ", %eax" << std::endl;
+    } else {
+        expr->expr->accept(this);
+        expr->unary_op->accept(this);
+//        std::string inner_expr = results.top();
+//        results.pop();
+//        std::string unary = results.top();
+//        results.pop();
+//        results.push(unary + inner_expr);
+    }
+}
+
+void GeneratorVisitor::visit(Function* func)
+{
+    output << " .globl " << func->name << std::endl;
+    output << func->name << ":" << std::endl;
+    func->stm->accept(this);
 }
 
 void GeneratorVisitor::visit(Goal* goal)
@@ -28,15 +48,22 @@ void GeneratorVisitor::visit(Literal* lit)
 void GeneratorVisitor::visit(Statement* stm)
 {
     stm->expr->accept(this);
-    std::string constant = results.top();
-    results.pop();
-    output << "\tmovl\t" << "$" << constant << ", %eax" << std::endl;
     output << "\tret" << std::endl;
 }
 
-void GeneratorVisitor::visit(Function* func)
+void GeneratorVisitor::visit(UnaryOperator* op)
 {
-    output << " .globl " << func->name << std::endl;
-    output << func->name << ":" << std::endl;
-    func->stm->accept(this);
+//    results.push(op->op.value);
+    switch (op->op.type) {
+    case (TokenType::COMPLEMENT):
+        output << "\tnot \t%eax" << std::endl;
+        break;
+    case (TokenType::MINUS):
+        output << "\tneg \t%eax" << std::endl;
+        break;
+    case (TokenType::NEGATION):
+        break;
+    default:
+        std::cerr << "Unexpected TokenType" << std::endl;
+    }
 }
