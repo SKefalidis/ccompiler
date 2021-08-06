@@ -62,6 +62,9 @@ void GeneratorVisitor::visit(UnaryOperator* op)
         output << "\tneg \t%eax" << std::endl;
         break;
     case (TokenType::NEGATION):
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tmovl \t$0, %eax" << std::endl;
+        output << "\tsete \t%al" << std::endl;
         break;
     default:
         std::cerr << "Unexpected TokenType" << std::endl;
