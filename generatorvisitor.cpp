@@ -109,7 +109,14 @@ void GeneratorVisitor::generate_binary_op(BinaryTermOp* binary_op)
         generate_binary_op(binary_op->fact);
         output << "\tpush \t%eax" << std::endl;
         binary_op->next_fact->accept(this);
-        output << "\tpop \t%ecx" << std::endl;
-        output << "\timul \t%ecx, %eax" << std::endl;
+        if (binary_op->op.type == TokenType::STAR) {
+            output << "\tpop \t%ecx" << std::endl;
+            output << "\timul \t%ecx, %eax" << std::endl;
+        } else if (binary_op->op.type == TokenType::SLASH) {
+            output << "\tmovl \t%eax, %ecx" << std::endl;
+            output << "\tpop \t%eax" << std::endl;
+            output << "\tcdq" << std::endl;
+            output << "\tidivl \t%ecx" << std::endl;
+        }
     }
 }
