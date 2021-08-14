@@ -1,6 +1,6 @@
 #include "term.h"
 
-Term::Term(BinaryFactorOp* binary_op)
+Term::Term(BinaryTermOp* binary_op)
     : binary_op(binary_op)
 {
     ;

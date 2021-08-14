@@ -4,6 +4,11 @@
 #include "function.h"
 #include "goal.h"
 #include "statement.h"
+#include "unaryoperator.h"
+#include "literal.h"
+#include "factor.h"
+#include "term.h"
+
 
 GeneratorVisitor::GeneratorVisitor(std::ofstream& stream) : output(stream)
 {
@@ -12,25 +17,22 @@ GeneratorVisitor::GeneratorVisitor(std::ofstream& stream) : output(stream)
 
 void GeneratorVisitor::visit(Expression* expr)
 {
-//    if (expr->value) {
-//        expr->value->accept(this);
-//        std::string constant = results.top();
-//        results.pop();
-//        output << "\tmovl\t" << "$" << constant << ", %eax" << std::endl;
-//    } else {
-//        expr->expr->accept(this);
-//        expr->unary_op->accept(this);
-//        std::string inner_expr = results.top();
-//        results.pop();
-//        std::string unary = results.top();
-//        results.pop();
-//        results.push(unary + inner_expr);
-//    }
+    generate_binary_op(expr->binary_op);
 }
 
 void GeneratorVisitor::visit(Factor* fact)
 {
-
+    if (fact->value) {
+        fact->value->accept(this);
+        std::string constant = results.top();
+        results.pop();
+        output << "\tmovl\t" << "$" << constant << ", %eax" << std::endl;
+    } else if (fact->expr) {
+        fact->expr->accept(this);
+    } else {
+        fact->inner_factor->accept(this);
+        fact->unary_op->accept(this);
+    }
 }
 
 void GeneratorVisitor::visit(Function* func)
@@ -47,7 +49,7 @@ void GeneratorVisitor::visit(Goal* goal)
 
 void GeneratorVisitor::visit(Literal* lit)
 {
-//    results.push(lit->value);
+    results.push(lit->value);
 }
 
 void GeneratorVisitor::visit(Statement* stm)
@@ -58,25 +60,51 @@ void GeneratorVisitor::visit(Statement* stm)
 
 void GeneratorVisitor::visit(Term* term)
 {
-
+    generate_binary_op(term->binary_op);
 }
 
 void GeneratorVisitor::visit(UnaryOperator* op)
 {
 //    results.push(op->op.value);
-//    switch (op->op.type) {
-//    case (TokenType::COMPLEMENT):
-//        output << "\tnot \t%eax" << std::endl;
-//        break;
-//    case (TokenType::MINUS):
-//        output << "\tneg \t%eax" << std::endl;
-//        break;
-//    case (TokenType::NEGATION):
-//        output << "\tcmpl \t$0, %eax" << std::endl;
-//        output << "\tmovl \t$0, %eax" << std::endl;
-//        output << "\tsete \t%al" << std::endl;
-//        break;
-//    default:
-//        std::cerr << "Unexpected TokenType" << std::endl;
-//    }
+    switch (op->op.type) {
+    case (TokenType::COMPLEMENT):
+        output << "\tnot \t%eax" << std::endl;
+        break;
+    case (TokenType::MINUS):
+        output << "\tneg \t%eax" << std::endl;
+        break;
+    case (TokenType::NEGATION):
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tmovl \t$0, %eax" << std::endl;
+        output << "\tsete \t%al" << std::endl;
+        break;
+    default:
+        std::cerr << "Unexpected TokenType" << std::endl;
+    }
+}
+
+void GeneratorVisitor::generate_binary_op(BinaryExprOp* binary_op)
+{
+    if (binary_op->op.type == TokenType::INVALID) {
+        binary_op->next_term->accept(this);
+    } else {
+        generate_binary_op(binary_op->term);
+        output << "\tpush \t%eax" << std::endl;
+        binary_op->next_term->accept(this);
+        output << "\tpop \t%ecx" << std::endl;
+        output << "\taddl \t%ecx, %eax" << std::endl;
+    }
+}
+
+void GeneratorVisitor::generate_binary_op(BinaryTermOp* binary_op)
+{
+    if (binary_op->op.type == TokenType::INVALID) {
+        binary_op->next_fact->accept(this);
+    } else {
+        generate_binary_op(binary_op->fact);
+        output << "\tpush \t%eax" << std::endl;
+        binary_op->next_fact->accept(this);
+        output << "\tpop \t%ecx" << std::endl;
+        output << "\timul \t%ecx, %eax" << std::endl;
+    }
 }

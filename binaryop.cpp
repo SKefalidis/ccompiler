@@ -1,6 +1,6 @@
 #include "binaryop.h"
 
-BinaryFactorOp::BinaryFactorOp(Token op, BinaryFactorOp* fact, Factor* next_fact)
+BinaryTermOp::BinaryTermOp(Token op, BinaryTermOp* fact, Factor* next_fact)
     : op(op), fact(fact), next_fact(next_fact)
 {
     ;

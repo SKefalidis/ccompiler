@@ -8,10 +8,10 @@
 class Term
 {
 public:
-    Term(BinaryFactorOp* binary_op);
+    Term(BinaryTermOp* binary_op);
     void accept(Visitor* v);
 
-    BinaryFactorOp* binary_op;
+    BinaryTermOp* binary_op;
 };
 
 #endif // TERM_H

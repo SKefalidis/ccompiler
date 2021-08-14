@@ -142,14 +142,14 @@ Term* Parser::term()
 {
     Term* term;
     if (fact()) {
-        BinaryFactorOp* b = new BinaryFactorOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Factor*>(nodes.top()));
+        BinaryTermOp* b = new BinaryTermOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Factor*>(nodes.top()));
         nodes.pop();
 
         Token t = peek();
         while (t.type == TokenType::STAR || t.type == TokenType::SLASH) {
             Token op = consume();
             Factor* next_fact = fact();
-            b = new BinaryFactorOp(op, b, next_fact);
+            b = new BinaryTermOp(op, b, next_fact);
             t = peek();
         }
 

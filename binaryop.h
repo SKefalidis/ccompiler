@@ -7,12 +7,12 @@ class Factor;
 class Term;
 
 
-class BinaryFactorOp
+class BinaryTermOp
 {
 public:
-    BinaryFactorOp(Token op, BinaryFactorOp* fact, Factor* next_fact);
+    BinaryTermOp(Token op, BinaryTermOp* fact, Factor* next_fact);
 
-    BinaryFactorOp* fact;
+    BinaryTermOp* fact;
     Factor* next_fact;
     Token op;
 };

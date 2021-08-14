@@ -5,6 +5,7 @@
 #include <stack>
 #include <string>
 #include "visitor.h"
+#include "binaryop.h"
 
 
 class GeneratorVisitor : public Visitor
@@ -22,6 +23,9 @@ public:
     void visit(UnaryOperator*   op)    override;
 
 private:
+    void generate_binary_op(BinaryExprOp* binary_op);
+    void generate_binary_op(BinaryTermOp* binary_op);
+
     std::ofstream& output;
     std::stack<std::string> results;
 };
