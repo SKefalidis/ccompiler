@@ -57,6 +57,7 @@ Expression* Parser::exp()
         while (t.type == TokenType::PLUS || t.type == TokenType::MINUS) {
             Token op = consume();
             Term* next_term = term();
+            nodes.pop();
             b = new BinaryExprOp(op, b, next_term);
             t = peek();
         }
@@ -149,6 +150,7 @@ Term* Parser::term()
         while (t.type == TokenType::STAR || t.type == TokenType::SLASH) {
             Token op = consume();
             Factor* next_fact = fact();
+            nodes.pop();
             b = new BinaryTermOp(op, b, next_fact);
             t = peek();
         }
