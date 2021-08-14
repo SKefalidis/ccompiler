@@ -92,7 +92,12 @@ void GeneratorVisitor::generate_binary_op(BinaryExprOp* binary_op)
         output << "\tpush \t%eax" << std::endl;
         binary_op->next_term->accept(this);
         output << "\tpop \t%ecx" << std::endl;
-        output << "\taddl \t%ecx, %eax" << std::endl;
+        if (binary_op->op.type == TokenType::PLUS) {
+            output << "\taddl \t%ecx, %eax" << std::endl;
+        } else if (binary_op->op.type == TokenType::MINUS) {
+            output << "\tsubl \t%eax, %ecx" << std::endl;
+            output << "\tmovl \t%ecx, %eax" << std::endl;
+        }
     }
 }
 
