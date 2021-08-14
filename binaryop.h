@@ -11,6 +11,7 @@ class BinaryTermOp
 {
 public:
     BinaryTermOp(Token op, BinaryTermOp* fact, Factor* next_fact);
+    void print(int tabs);
 
     BinaryTermOp* fact;
     Factor* next_fact;
@@ -21,6 +22,7 @@ class BinaryExprOp
 {
 public:
     BinaryExprOp(Token op, BinaryExprOp* term, Term* next_term);
+    void print(int tabs);
 
     BinaryExprOp* term;
     Term* next_term;

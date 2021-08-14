@@ -16,10 +16,11 @@ add_executable(ccompiler
     expression.h expression.cpp
     return.h return.cpp
     literal.h literal.cpp
-    visitor.h
+    visitor.h visitor.cpp
     generatorvisitor.h generatorvisitor.cpp
     unaryoperator.h unaryoperator.cpp
     term.h term.cpp
     factor.h factor.cpp
     binaryop.h binaryop.cpp
+    node.h node.cpp
     )

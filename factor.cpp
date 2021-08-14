@@ -1,3 +1,4 @@
+#include <iostream>
 #include "factor.h"
 
 Factor::Factor(Literal* literal)
@@ -21,4 +22,16 @@ Factor::Factor(Expression* expr)
 void Factor::accept(Visitor* v)
 {
     v->visit(this);
+}
+
+void Factor::print_node(int tabs) const
+{
+    std::cout << tabs_string(tabs) << "FACTOR" << std::endl;
+    if (value) {
+        std::cout << tabs_string(tabs + 1) << value->value << std::endl;
+    } else if (unary_op && inner_factor) {
+
+    } else if (expr) {
+        expr->print_node(tabs + 1);
+    }
 }

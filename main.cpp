@@ -8,6 +8,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "generatorvisitor.h"
+#include "node.h"
 
 using namespace std;
 
@@ -36,6 +37,7 @@ int main(int argc, char** argv)
     auto tokens = lex.lex();
     Parser parser(tokens);
     auto g = parser.parse();
+    print_ast(g);
     generate(g);
 
     pid_t pid = fork();
@@ -76,7 +78,7 @@ void generate(Goal* g)
 
 void print_ast(Goal* g)
 {
-
+    g->print_node(0);
 }
 
 vector<string> splitString(string s, char delimiter)

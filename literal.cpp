@@ -17,5 +17,5 @@ IntLiteral::IntLiteral(std::string value) : Literal(value)
 
 void* IntLiteral::evaluate() const
 {
-
+    return NULL;
 }

@@ -65,7 +65,6 @@ void GeneratorVisitor::visit(Term* term)
 
 void GeneratorVisitor::visit(UnaryOperator* op)
 {
-//    results.push(op->op.value);
     switch (op->op.type) {
     case (TokenType::COMPLEMENT):
         output << "\tnot \t%eax" << std::endl;
