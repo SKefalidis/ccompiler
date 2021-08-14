@@ -13,10 +13,12 @@ public:
     GeneratorVisitor(std::ofstream& stream);
 
     void visit(Expression*      expr)  override;
+    void visit(Factor*          fact)  override;
     void visit(Function*        func)  override;
     void visit(Goal*            goal)  override;
     void visit(Literal*         lit)   override;
     void visit(Statement*       stm)   override;
+    void visit(Term*            term)  override;
     void visit(UnaryOperator*   op)    override;
 
 private:

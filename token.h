@@ -12,6 +12,9 @@ enum class TokenType {
     RPAREN,
     SEMICOLON,
     MINUS,
+    PLUS,
+    STAR,
+    SLASH,
     COMPLEMENT,
     NEGATION,
 

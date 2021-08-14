@@ -1,12 +1,7 @@
 #include "expression.h"
 
-Expression::Expression(Literal* literal) : value(literal)
-{
-    ;
-}
-
-Expression::Expression(UnaryOperator* op, Expression* expr)
-    : unary_op(op), expr(expr)
+Expression::Expression(BinaryExprOp* binary_op)
+    : binary_op(binary_op)
 {
     ;
 }

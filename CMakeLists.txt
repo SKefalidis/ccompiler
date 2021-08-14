@@ -19,4 +19,7 @@ add_executable(ccompiler
     visitor.h
     generatorvisitor.h generatorvisitor.cpp
     unaryoperator.h unaryoperator.cpp
+    term.h term.cpp
+    factor.h factor.cpp
+    binaryop.h binaryop.cpp
     )

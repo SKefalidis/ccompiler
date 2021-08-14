@@ -3,20 +3,16 @@
 
 #include <string>
 #include "visitor.h"
-#include "literal.h"
-#include "unaryoperator.h"
+#include "binaryop.h"
 
 
 class Expression
 {
 public:
-    Expression(Literal* literal);
-    Expression(UnaryOperator* op, Expression* expr);
+    Expression(BinaryExprOp* binary_op);
     void accept(Visitor* v);
 
-    Literal* value;
-    UnaryOperator* unary_op;
-    Expression* expr;
+    BinaryExprOp* binary_op;
 };
 
 #endif // EXPRESSION_H

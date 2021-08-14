@@ -6,12 +6,15 @@
 #include <string>
 #include "token.h"
 
+#include "binaryop.h"
 #include "goal.h"
 #include "expression.h"
+#include "factor.h"
 #include "function.h"
 #include "literal.h"
 #include "return.h"
 #include "statement.h"
+#include "term.h"
 #include "unaryoperator.h"
 
 
@@ -28,8 +31,10 @@ private:
     void parse_error(std::string error);
 
     Expression*     exp();
+    Factor*         fact();
     Function*       func();
     Statement*      stm();
+    Term*           term();
     UnaryOperator*  unary_op();
 
     std::vector<Token> tokens;

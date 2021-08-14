@@ -49,26 +49,57 @@ Goal* Parser::parse()
 Expression* Parser::exp()
 {
     Expression* e;
+    if (term()) {
+        BinaryExprOp* b = new BinaryExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Term*>(nodes.top()));
+        nodes.pop();
+
+        Token t = peek();
+        while (t.type == TokenType::PLUS || t.type == TokenType::MINUS) {
+            Token op = consume();
+            Term* next_term = term();
+            b = new BinaryExprOp(op, b, next_term);
+            t = peek();
+        }
+
+        e = new Expression(b);
+        nodes.push(e);
+    } else {
+        return NULL;
+    }
+    return e;
+}
+
+Factor* Parser::fact()
+{
+    Factor* f;
     if (peek().type == TokenType::INTEGER_LITERAL) {
         Token t = consume_and_check(TokenType::INTEGER_LITERAL);
         if (t.type == TokenType::INVALID) {
             return NULL;
         }
 
-        e = new Expression(new IntLiteral(t.value));
-        nodes.push(e);
-    } else if (unary_op() && exp()) {
-        Expression* inner_expr = static_cast<Expression*>(nodes.top());
+        f = new Factor(new IntLiteral(t.value));
+        nodes.push(f);
+    } else if (peek().type == TokenType::LPAREN) {
+        consume_and_check(TokenType::LPAREN);
+        Expression* e = exp();
+        nodes.pop(); /* not needing the stack */
+        consume_and_check(TokenType::RPAREN);
+
+        f = new Factor(e);
+        nodes.push(f);
+    } else if (unary_op() && fact()) {
+        Factor* inner_factor = static_cast<Factor*>(nodes.top());
         nodes.pop();
         UnaryOperator* op = static_cast<UnaryOperator*>(nodes.top());
         nodes.pop();
 
-        e = new Expression(op, inner_expr);
-        nodes.push(e);
+        f = new Factor(op, inner_factor);
+        nodes.push(f);
     } else {
         return NULL;
     }
-    return e;
+    return f;
 }
 
 Function* Parser::func()
@@ -105,6 +136,29 @@ Statement* Parser::stm()
     }
     consume_and_check(TokenType::SEMICOLON);
     return s;
+}
+
+Term* Parser::term()
+{
+    Term* term;
+    if (fact()) {
+        BinaryFactorOp* b = new BinaryFactorOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Factor*>(nodes.top()));
+        nodes.pop();
+
+        Token t = peek();
+        while (t.type == TokenType::STAR || t.type == TokenType::SLASH) {
+            Token op = consume();
+            Factor* next_fact = fact();
+            b = new BinaryFactorOp(op, b, next_fact);
+            t = peek();
+        }
+
+        term = new Term(b);
+        nodes.push(term);
+    } else {
+        return NULL;
+    }
+    return term;
 }
 
 UnaryOperator* Parser::unary_op()

@@ -60,6 +60,18 @@ std::vector<Token> Lexer::lex()
             consume();
             tokens.push_back(Token(TokenType::MINUS, "-"));
             break;
+        case '+':
+            consume();
+            tokens.push_back(Token(TokenType::PLUS, "+"));
+            break;
+        case '*':
+            consume();
+            tokens.push_back(Token(TokenType::STAR, "*"));
+            break;
+        case '/':
+            consume();
+            tokens.push_back(Token(TokenType::SLASH, "/"));
+            break;
         case '~':
             consume();
             tokens.push_back(Token(TokenType::COMPLEMENT, "~"));

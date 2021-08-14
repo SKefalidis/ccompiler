@@ -9,6 +9,9 @@ std::unordered_map<TokenType, std::string> tokenTypeStrings {
     { TokenType::MINUS,             "MINUS",            },
     { TokenType::COMPLEMENT,        "COMPLEMENT",       },
     { TokenType::NEGATION,          "NEGATION",         },
+    { TokenType::PLUS,              "PLUS",             },
+    { TokenType::STAR,              "STAR",             },
+    { TokenType::SLASH,             "SLASH",            },
 
     { TokenType::RETURN,            "RETURN",           },
     { TokenType::INT,               "INT",              },
