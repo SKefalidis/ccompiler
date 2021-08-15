@@ -9,9 +9,13 @@
 #include "binaryop.h"
 #include "goal.h"
 #include "additiveexpression.h"
+#include "andexpression.h"
+#include "equalityexpression.h"
+#include "expression.h"
 #include "factor.h"
 #include "function.h"
 #include "literal.h"
+#include "relationalexpression.h"
 #include "return.h"
 #include "statement.h"
 #include "term.h"
@@ -30,12 +34,16 @@ private:
     Token consume_and_check(TokenType expected);
     void parse_error(std::string error);
 
-    AdditiveExpression*     exp();
-    Factor*         fact();
-    Function*       func();
-    Statement*      stm();
-    Term*           term();
-    UnaryOperator*  unary_op();
+    AdditiveExpression*     add_expr();
+    AndExpression*          and_expr();
+    EqualityExpression*     eq_expr();
+    Expression*             expr();
+    Factor*                 fact();
+    Function*               func();
+    RelationalExpression*   rel_expr();
+    Statement*              stm();
+    Term*                   term();
+    UnaryOperator*          unary_op();
 
     std::vector<Token> tokens;
     int current_token;

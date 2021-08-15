@@ -13,7 +13,7 @@ Factor::Factor(UnaryOperator* op, Factor* factor)
     ;
 }
 
-Factor::Factor(AdditiveExpression* expr)
+Factor::Factor(Expression* expr)
     : expr(expr)
 {
     ;

@@ -3,6 +3,10 @@
 
 #include "token.h"
 
+class AdditiveExpression;
+class AndExpression;
+class EqualityExpression;
+class RelationalExpression;
 class Factor;
 class Term;
 
@@ -21,11 +25,55 @@ public:
 class BinaryExprOp
 {
 public:
-    BinaryExprOp(Token op, BinaryExprOp* term, Term* next_term);
+    BinaryExprOp(Token op, BinaryExprOp* expr, AndExpression* next_expr);
     void print(int tabs);
 
-    BinaryExprOp* term;
+    BinaryExprOp* expr;
+    AndExpression* next_expr;
+    Token op;
+};
+
+class BinaryAddExprOp
+{
+public:
+    BinaryAddExprOp(Token op, BinaryAddExprOp* term, Term* next_term);
+    void print(int tabs);
+
+    BinaryAddExprOp* term;
     Term* next_term;
+    Token op;
+};
+
+class BinaryAndExprOp
+{
+public:
+    BinaryAndExprOp(Token op, BinaryAndExprOp* expr, EqualityExpression* next_expr);
+    void print(int tabs);
+
+    BinaryAndExprOp* expr;
+    EqualityExpression* next_expr;
+    Token op;
+};
+
+class BinaryEqExprOp
+{
+public:
+    BinaryEqExprOp(Token op, BinaryEqExprOp* expr, RelationalExpression* next_expr);
+    void print(int tabs);
+
+    BinaryEqExprOp* expr;
+    RelationalExpression* next_expr;
+    Token op;
+};
+
+class BinaryRelExprOp
+{
+public:
+    BinaryRelExprOp(Token op, BinaryRelExprOp* expr, AdditiveExpression* next_expr);
+    void print(int tabs);
+
+    BinaryRelExprOp* expr;
+    AdditiveExpression* next_expr;
     Token op;
 };
 

@@ -46,11 +46,11 @@ Goal* Parser::parse()
     }
 }
 
-AdditiveExpression* Parser::exp()
+AdditiveExpression* Parser::add_expr()
 {
     AdditiveExpression* e;
     if (term()) {
-        BinaryExprOp* b = new BinaryExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Term*>(nodes.top()));
+        BinaryAddExprOp* b = new BinaryAddExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Term*>(nodes.top()));
         nodes.pop();
 
         Token t = peek();
@@ -58,11 +58,83 @@ AdditiveExpression* Parser::exp()
             Token op = consume();
             Term* next_term = term();
             nodes.pop();
-            b = new BinaryExprOp(op, b, next_term);
+            b = new BinaryAddExprOp(op, b, next_term);
             t = peek();
         }
 
         e = new AdditiveExpression(b);
+        nodes.push(e);
+    } else {
+        return NULL;
+    }
+    return e;
+}
+
+AndExpression* Parser::and_expr()
+{
+    AndExpression* e;
+    if (eq_expr()) {
+        BinaryAndExprOp* b = new BinaryAndExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<EqualityExpression*>(nodes.top()));
+        nodes.pop();
+
+        Token t = peek();
+        while (t.type == TokenType::AND) {
+            Token op = consume();
+            EqualityExpression* next_expr = eq_expr();
+            nodes.pop();
+            b = new BinaryAndExprOp(op, b, next_expr);
+            t = peek();
+        }
+
+        e = new AndExpression(b);
+        nodes.push(e);
+    } else {
+        return NULL;
+    }
+    return e;
+}
+
+EqualityExpression* Parser::eq_expr()
+{
+    EqualityExpression* e;
+    if (rel_expr()) {
+        BinaryEqExprOp* b = new BinaryEqExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<RelationalExpression*>(nodes.top()));
+        nodes.pop();
+
+        Token t = peek();
+        while (t.type == TokenType::EQ || t.type == TokenType::NEQ) {
+            Token op = consume();
+            RelationalExpression* next_expr = rel_expr();
+            nodes.pop();
+            b = new BinaryEqExprOp(op, b, next_expr);
+            t = peek();
+        }
+
+        e = new EqualityExpression(b);
+        nodes.push(e);
+    } else {
+        return NULL;
+    }
+    return e;
+}
+
+Expression* Parser::expr()
+{
+    Expression* e;
+    if (and_expr()) {
+        BinaryExprOp* b = new BinaryExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AndExpression*>(nodes.top()));
+        nodes.pop();
+
+        Token t = peek();
+        while (t.type == TokenType::OR) {
+            Token op = consume();
+            AndExpression* next_expr = and_expr();
+            nodes.pop();
+            b = new BinaryExprOp(op, b, next_expr);
+            t = peek();
+        }
+
+        e = new Expression(b);
         nodes.push(e);
     } else {
         return NULL;
@@ -83,7 +155,7 @@ Factor* Parser::fact()
         nodes.push(f);
     } else if (peek().type == TokenType::LPAREN) {
         consume_and_check(TokenType::LPAREN);
-        AdditiveExpression* e = exp();
+        Expression* e = expr();
         nodes.pop(); /* not needing the stack */
         consume_and_check(TokenType::RPAREN);
 
@@ -123,12 +195,36 @@ Function* Parser::func()
     return f;
 }
 
+RelationalExpression* Parser::rel_expr()
+{
+    RelationalExpression* e;
+    if (add_expr()) {
+        BinaryRelExprOp* b = new BinaryRelExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AdditiveExpression*>(nodes.top()));
+        nodes.pop();
+
+        Token t = peek();
+        while (t.type == TokenType::LT || t.type == TokenType::LE || t.type == TokenType::GT || t.type == TokenType::GE) {
+            Token op = consume();
+            AdditiveExpression* next_expr = add_expr();
+            nodes.pop();
+            b = new BinaryRelExprOp(op, b, next_expr);
+            t = peek();
+        }
+
+        e = new RelationalExpression(b);
+        nodes.push(e);
+    } else {
+        return NULL;
+    }
+    return e;
+}
+
 Statement* Parser::stm()
 {
     Statement* s;
     consume_and_check(TokenType::RETURN);
-    if (exp()) {
-        AdditiveExpression* e = static_cast<AdditiveExpression*>(nodes.top());
+    if (expr()) {
+        Expression* e = static_cast<Expression*>(nodes.top());
         s = new Statement(e);
         nodes.pop();
         nodes.push(s);

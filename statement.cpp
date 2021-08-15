@@ -1,9 +1,10 @@
 #include <iostream>
 #include "statement.h"
 
-Statement::Statement(AdditiveExpression* expr) : expr(expr)
+Statement::Statement(Expression* expr)
+    : expr(expr)
 {
-
+    ;
 }
 
 void Statement::accept(Visitor* v)

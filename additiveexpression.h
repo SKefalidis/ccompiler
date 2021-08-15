@@ -10,11 +10,11 @@
 class AdditiveExpression : public Node
 {
 public:
-    AdditiveExpression(BinaryExprOp* binary_op);
+    AdditiveExpression(BinaryAddExprOp* binary_op);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    BinaryExprOp* binary_op;
+    BinaryAddExprOp* binary_op;
 };
 
 #endif // ADDITIVEEXPRESSION_H

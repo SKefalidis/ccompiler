@@ -23,4 +23,8 @@ add_executable(ccompiler
     factor.h factor.cpp
     binaryop.h binaryop.cpp
     node.h node.cpp
+    relationalexpression.h relationalexpression.cpp
+    equalityexpression.h equalityexpression.cpp
+    andexpression.h andexpression.cpp
+    expression.h expression.cpp
     )

@@ -3,6 +3,7 @@
 #include "additiveexpression.h"
 #include "function.h"
 #include "goal.h"
+#include "relationalexpression.h"
 #include "statement.h"
 #include "unaryoperator.h"
 #include "literal.h"
@@ -18,6 +19,21 @@ GeneratorVisitor::GeneratorVisitor(std::ofstream& stream) : output(stream)
 void GeneratorVisitor::visit(AdditiveExpression* expr)
 {
     generate_binary_op(expr->binary_op);
+}
+
+void GeneratorVisitor::visit(AndExpression* expr)
+{
+
+}
+
+void GeneratorVisitor::visit(EqualityExpression* expr)
+{
+
+}
+
+void GeneratorVisitor::visit(Expression* expr)
+{
+
 }
 
 void GeneratorVisitor::visit(Factor* fact)
@@ -52,6 +68,11 @@ void GeneratorVisitor::visit(Literal* lit)
     results.push(lit->value);
 }
 
+void GeneratorVisitor::visit(RelationalExpression* expr)
+{
+    generate_binary_op(expr->binary_op);
+}
+
 void GeneratorVisitor::visit(Statement* stm)
 {
     stm->expr->accept(this);
@@ -82,7 +103,7 @@ void GeneratorVisitor::visit(UnaryOperator* op)
     }
 }
 
-void GeneratorVisitor::generate_binary_op(BinaryExprOp* binary_op)
+void GeneratorVisitor::generate_binary_op(BinaryAddExprOp* binary_op)
 {
     if (binary_op->op.type == TokenType::INVALID) {
         binary_op->next_term->accept(this);
@@ -98,6 +119,26 @@ void GeneratorVisitor::generate_binary_op(BinaryExprOp* binary_op)
             output << "\tmovl \t%ecx, %eax" << std::endl;
         }
     }
+}
+
+void GeneratorVisitor::generate_binary_op(BinaryAndExprOp* binary_op)
+{
+
+}
+
+void GeneratorVisitor::generate_binary_op(BinaryEqExprOp* binary_op)
+{
+
+}
+
+void GeneratorVisitor::generate_binary_op(BinaryExprOp* binary_op)
+{
+
+}
+
+void GeneratorVisitor::generate_binary_op(BinaryRelExprOp* binary_op)
+{
+
 }
 
 void GeneratorVisitor::generate_binary_op(BinaryTermOp* binary_op)

@@ -4,7 +4,7 @@
 #include <string>
 #include "visitor.h"
 #include "node.h"
-#include "additiveexpression.h"
+#include "expression.h"
 #include "literal.h"
 #include "unaryoperator.h"
 
@@ -14,7 +14,7 @@ class Factor : public Node
 public:
     Factor(Literal* literal);
     Factor(UnaryOperator* op, Factor* factor);
-    Factor(AdditiveExpression* expr);
+    Factor(Expression* expr);
 
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
@@ -22,7 +22,7 @@ public:
     Literal* value;
     UnaryOperator* unary_op;
     Factor* inner_factor;
-    AdditiveExpression* expr;
+    Expression* expr;
 };
 
 #endif // FACTOR_H
