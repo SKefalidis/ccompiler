@@ -33,9 +33,11 @@ private:
     void generate_binary_op(BinaryExprOp* binary_op);
     void generate_binary_op(BinaryRelExprOp* binary_op);
     void generate_binary_op(BinaryTermOp* binary_op);
+    std::string get_label();
 
     std::ofstream& output;
     std::stack<std::string> results;
+    int label_counter { 0 };
 };
 
 #endif // GENERATORVISITOR_H

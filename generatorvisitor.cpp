@@ -3,6 +3,8 @@
 #include "additiveexpression.h"
 #include "function.h"
 #include "goal.h"
+#include "andexpression.h"
+#include "equalityexpression.h"
 #include "relationalexpression.h"
 #include "statement.h"
 #include "unaryoperator.h"
@@ -23,17 +25,17 @@ void GeneratorVisitor::visit(AdditiveExpression* expr)
 
 void GeneratorVisitor::visit(AndExpression* expr)
 {
-
+    generate_binary_op(expr->binary_op);
 }
 
 void GeneratorVisitor::visit(EqualityExpression* expr)
 {
-
+    generate_binary_op(expr->binary_op);
 }
 
 void GeneratorVisitor::visit(Expression* expr)
 {
-
+    generate_binary_op(expr->binary_op);
 }
 
 void GeneratorVisitor::visit(Factor* fact)
@@ -123,22 +125,97 @@ void GeneratorVisitor::generate_binary_op(BinaryAddExprOp* binary_op)
 
 void GeneratorVisitor::generate_binary_op(BinaryAndExprOp* binary_op)
 {
-
+    if (binary_op->op.type == TokenType::INVALID) {
+        binary_op->next_expr->accept(this);
+    } else {
+        std::string label = get_label();
+        std::string end_label = get_label();
+        generate_binary_op(binary_op->expr);
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tjne " << label << std::endl;
+        output << "\tjmp " << end_label << std::endl;
+        output << label << ":" << std::endl;
+        binary_op->next_expr->accept(this);
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tmovl \t$0, %eax" << std::endl;
+        output << "\tsetne \t%al" << std::endl;
+        output << end_label << ":" << std::endl;
+    }
 }
 
 void GeneratorVisitor::generate_binary_op(BinaryEqExprOp* binary_op)
 {
-
+    if (binary_op->op.type == TokenType::INVALID) {
+        binary_op->next_expr->accept(this);
+    } else {
+        generate_binary_op(binary_op->expr);
+        output << "\tpush \t%eax" << std::endl;
+        binary_op->next_expr->accept(this);
+        output << "\tpop \t%ecx" << std::endl;
+        output << "\tcmpl \t%eax, %ecx" << std::endl;
+        output << "\tmovl \t$0, %eax" << std::endl;
+        switch (binary_op->op.type) {
+        case (TokenType::EQ):
+            output << "\tsete \t%al" << std::endl;
+            break;
+        case (TokenType::NEQ):
+            output << "\tsetne \t%al" << std::endl;
+            break;
+        default:
+             std::cerr << "Unexpected TokenType" << std::endl;
+        }
+    }
 }
 
 void GeneratorVisitor::generate_binary_op(BinaryExprOp* binary_op)
 {
-
+    if (binary_op->op.type == TokenType::INVALID) {
+        binary_op->next_expr->accept(this);
+    } else {
+        std::string label = get_label();
+        std::string end_label = get_label();
+        generate_binary_op(binary_op->expr);
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tje " << label << std::endl;
+        output << "\tmovl \t$1, %eax" << std::endl;
+        output << "\tjmp " << end_label << std::endl;
+        output << label << ":" << std::endl;
+        binary_op->next_expr->accept(this);
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tmovl \t$0, %eax" << std::endl;
+        output << "\tsetne \t%al" << std::endl;
+        output << end_label << ":" << std::endl;
+    }
 }
 
 void GeneratorVisitor::generate_binary_op(BinaryRelExprOp* binary_op)
 {
-
+    if (binary_op->op.type == TokenType::INVALID) {
+        binary_op->next_expr->accept(this);
+    } else {
+        generate_binary_op(binary_op->expr);
+        output << "\tpush \t%eax" << std::endl;
+        binary_op->next_expr->accept(this);
+        output << "\tpop \t%ecx" << std::endl;
+        output << "\tcmpl \t%eax, %ecx" << std::endl;
+        output << "\tmovl \t$0, %eax" << std::endl;
+        switch (binary_op->op.type) {
+        case (TokenType::GE):
+            output << "\tsetge \t%al" << std::endl;
+            break;
+        case (TokenType::GT):
+            output << "\tsetg \t%al" << std::endl;
+            break;
+        case (TokenType::LE):
+            output << "\tsetle \t%al" << std::endl;
+            break;
+        case (TokenType::LT):
+            output << "\tsetl \t%al" << std::endl;
+            break;
+        default:
+             std::cerr << "Unexpected TokenType" << std::endl;
+        }
+    }
 }
 
 void GeneratorVisitor::generate_binary_op(BinaryTermOp* binary_op)
@@ -159,4 +236,9 @@ void GeneratorVisitor::generate_binary_op(BinaryTermOp* binary_op)
             output << "\tidivl \t%ecx" << std::endl;
         }
     }
+}
+
+std::string GeneratorVisitor::get_label()
+{
+    return "_label" + std::to_string(label_counter++);
 }
