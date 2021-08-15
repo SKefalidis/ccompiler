@@ -8,7 +8,7 @@
 
 #include "binaryop.h"
 #include "goal.h"
-#include "expression.h"
+#include "additiveexpression.h"
 #include "factor.h"
 #include "function.h"
 #include "literal.h"
@@ -30,7 +30,7 @@ private:
     Token consume_and_check(TokenType expected);
     void parse_error(std::string error);
 
-    Expression*     exp();
+    AdditiveExpression*     exp();
     Factor*         fact();
     Function*       func();
     Statement*      stm();

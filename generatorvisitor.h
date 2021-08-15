@@ -13,7 +13,7 @@ class GeneratorVisitor : public Visitor
 public:
     GeneratorVisitor(std::ofstream& stream);
 
-    void visit(Expression*      expr)  override;
+    void visit(AdditiveExpression*      expr)  override;
     void visit(Factor*          fact)  override;
     void visit(Function*        func)  override;
     void visit(Goal*            goal)  override;

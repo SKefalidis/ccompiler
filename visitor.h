@@ -2,7 +2,7 @@
 #define VISITOR_H
 
 class Node;
-class Expression;
+class AdditiveExpression;
 class Factor;
 class Function;
 class Goal;
@@ -14,7 +14,7 @@ class UnaryOperator;
 class Visitor
 {
 public:
-    virtual void visit(Expression*      expr) = 0;
+    virtual void visit(AdditiveExpression*      expr) = 0;
     virtual void visit(Factor*          fact) = 0;
     virtual void visit(Function*        func) = 0;
     virtual void visit(Goal*            goal) = 0;

@@ -46,9 +46,9 @@ Goal* Parser::parse()
     }
 }
 
-Expression* Parser::exp()
+AdditiveExpression* Parser::exp()
 {
-    Expression* e;
+    AdditiveExpression* e;
     if (term()) {
         BinaryExprOp* b = new BinaryExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Term*>(nodes.top()));
         nodes.pop();
@@ -62,7 +62,7 @@ Expression* Parser::exp()
             t = peek();
         }
 
-        e = new Expression(b);
+        e = new AdditiveExpression(b);
         nodes.push(e);
     } else {
         return NULL;
@@ -83,7 +83,7 @@ Factor* Parser::fact()
         nodes.push(f);
     } else if (peek().type == TokenType::LPAREN) {
         consume_and_check(TokenType::LPAREN);
-        Expression* e = exp();
+        AdditiveExpression* e = exp();
         nodes.pop(); /* not needing the stack */
         consume_and_check(TokenType::RPAREN);
 
@@ -128,7 +128,7 @@ Statement* Parser::stm()
     Statement* s;
     consume_and_check(TokenType::RETURN);
     if (exp()) {
-        Expression* e = static_cast<Expression*>(nodes.top());
+        AdditiveExpression* e = static_cast<AdditiveExpression*>(nodes.top());
         s = new Statement(e);
         nodes.pop();
         nodes.push(s);

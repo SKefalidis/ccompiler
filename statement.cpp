@@ -1,7 +1,7 @@
 #include <iostream>
 #include "statement.h"
 
-Statement::Statement(Expression* expr) : expr(expr)
+Statement::Statement(AdditiveExpression* expr) : expr(expr)
 {
 
 }

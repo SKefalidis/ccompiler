@@ -13,7 +13,7 @@ add_executable(ccompiler
     goal.h goal.cpp
     function.h function.cpp
     statement.h statement.cpp
-    expression.h expression.cpp
+    additiveexpression.h additiveexpression.cpp
     return.h return.cpp
     literal.h literal.cpp
     visitor.h visitor.cpp

@@ -1,6 +1,6 @@
 #include <iostream>
 #include "generatorvisitor.h"
-#include "expression.h"
+#include "additiveexpression.h"
 #include "function.h"
 #include "goal.h"
 #include "statement.h"
@@ -15,7 +15,7 @@ GeneratorVisitor::GeneratorVisitor(std::ofstream& stream) : output(stream)
     ;
 }
 
-void GeneratorVisitor::visit(Expression* expr)
+void GeneratorVisitor::visit(AdditiveExpression* expr)
 {
     generate_binary_op(expr->binary_op);
 }
