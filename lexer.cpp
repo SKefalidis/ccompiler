@@ -78,8 +78,53 @@ std::vector<Token> Lexer::lex()
             break;
         case '!':
             consume();
-            tokens.push_back(Token(TokenType::NEGATION, "!"));
+            c = file.peek();
+            if (c == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::NEQ, "!="));
+            } else {
+                tokens.push_back(Token(TokenType::NEGATION, "!"));
+            }
             break;
+        case '&':
+            consume();
+            c = file.peek();
+            if (c == '&') {
+                consume();
+                tokens.push_back(Token(TokenType::AND, "&&"));
+            }
+        case '|':
+            consume();
+            c = file.peek();
+            if (c == '|') {
+                consume();
+                tokens.push_back(Token(TokenType::OR, "||"));
+            }
+        case '=':
+            consume();
+            c = file.peek();
+            if (c == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::EQ, "=="));
+            }
+        case '<':
+            consume();
+            c = file.peek();
+            if (c == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::LE, "<="));
+            } else {
+                tokens.push_back(Token(TokenType::LT, "<"));
+            }
+        case '>':
+            consume();
+            c = file.peek();
+            if (c == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::GE, ">="));
+            } else {
+                tokens.push_back(Token(TokenType::GT, ">"));
+            }
 
         case ' ':
             column++;
