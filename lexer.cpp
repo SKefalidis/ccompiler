@@ -93,6 +93,7 @@ std::vector<Token> Lexer::lex()
                 consume();
                 tokens.push_back(Token(TokenType::AND, "&&"));
             }
+            break;
         case '|':
             consume();
             c = file.peek();
@@ -100,6 +101,7 @@ std::vector<Token> Lexer::lex()
                 consume();
                 tokens.push_back(Token(TokenType::OR, "||"));
             }
+            break;
         case '=':
             consume();
             c = file.peek();
@@ -107,6 +109,7 @@ std::vector<Token> Lexer::lex()
                 consume();
                 tokens.push_back(Token(TokenType::EQ, "=="));
             }
+            break;
         case '<':
             consume();
             c = file.peek();
@@ -116,6 +119,7 @@ std::vector<Token> Lexer::lex()
             } else {
                 tokens.push_back(Token(TokenType::LT, "<"));
             }
+            break;
         case '>':
             consume();
             c = file.peek();
@@ -125,6 +129,7 @@ std::vector<Token> Lexer::lex()
             } else {
                 tokens.push_back(Token(TokenType::GT, ">"));
             }
+            break;
 
         case ' ':
             column++;
