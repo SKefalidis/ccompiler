@@ -20,6 +20,7 @@ std::unordered_map<TokenType, std::string> tokenTypeStrings {
     { TokenType::LE,                "LE",               },
     { TokenType::GT,                "GT",               },
     { TokenType::GE,                "GE",               },
+    { TokenType::ASSIGN,            "ASSIGN",           },
 
     { TokenType::RETURN,            "RETURN",           },
     { TokenType::INT,               "INT",              },

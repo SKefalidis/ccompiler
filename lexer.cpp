@@ -108,6 +108,8 @@ std::vector<Token> Lexer::lex()
             if (c == '=') {
                 consume();
                 tokens.push_back(Token(TokenType::EQ, "=="));
+            } else {
+                tokens.push_back(Token(TokenType::ASSIGN, "="));
             }
             break;
         case '<':

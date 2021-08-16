@@ -25,6 +25,7 @@ enum class TokenType {
     LE,
     GT,
     GE,
+    ASSIGN,
 
     RETURN,
     INT,
