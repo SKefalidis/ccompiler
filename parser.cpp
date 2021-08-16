@@ -152,7 +152,6 @@ Factor* Parser::fact()
         }
 
         f = new Factor(new IntLiteral(t.value));
-        nodes.push(f);
     } else if (peek().type == TokenType::LPAREN) {
         consume_and_check(TokenType::LPAREN);
         Expression* e = expr();
@@ -160,7 +159,10 @@ Factor* Parser::fact()
         consume_and_check(TokenType::RPAREN);
 
         f = new Factor(e);
-        nodes.push(f);
+    } else if (peek().type == TokenType::IDENTIFIER) {
+        std::string variable = consume().value;
+
+        f = new Factor(variable);
     } else if (unary_op() && fact()) {
         Factor* inner_factor = static_cast<Factor*>(nodes.top());
         nodes.pop();
@@ -168,10 +170,10 @@ Factor* Parser::fact()
         nodes.pop();
 
         f = new Factor(op, inner_factor);
-        nodes.push(f);
     } else {
         return NULL;
     }
+    nodes.push(f);
     return f;
 }
 

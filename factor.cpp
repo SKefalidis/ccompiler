@@ -19,6 +19,12 @@ Factor::Factor(Expression* expr)
     ;
 }
 
+Factor::Factor(std::string variable)
+    : variable(variable)
+{
+    ;
+}
+
 void Factor::accept(Visitor* v)
 {
     v->visit(this);

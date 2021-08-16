@@ -15,14 +15,16 @@ public:
     Factor(Literal* literal);
     Factor(UnaryOperator* op, Factor* factor);
     Factor(Expression* expr);
+    Factor(std::string variable);
 
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    Literal* value;
-    UnaryOperator* unary_op;
-    Factor* inner_factor;
-    Expression* expr;
+    Literal* value          { nullptr };
+    UnaryOperator* unary_op { nullptr };
+    Factor* inner_factor    { nullptr };
+    Expression* expr        { nullptr };
+    std::string variable    { "" };
 };
 
 #endif // FACTOR_H
