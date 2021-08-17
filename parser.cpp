@@ -6,9 +6,9 @@ Parser::Parser(std::vector<Token> tokens) : tokens(tokens)
     ;
 }
 
-Token Parser::peek() const
+Token Parser::peek(int offset) const
 {
-    return tokens.at(current_token);
+    return tokens.at(current_token + offset);
 }
 
 Token Parser::consume()
@@ -121,8 +121,30 @@ EqualityExpression* Parser::eq_expr()
 Expression* Parser::expr()
 {
     Expression* e;
+    if (peek().type == TokenType::IDENTIFIER && peek(1).type == TokenType::ASSIGN) {
+        std::string id = consume().value;
+        consume_and_check(TokenType::ASSIGN);
+        Expression* r_expr = expr();
+        nodes.pop();
+
+        e = new Expression(id, r_expr);
+        nodes.push(e);
+    } else if (or_expr()) {
+        OrExpression* o_expr = static_cast<OrExpression*>(nodes.top());
+        nodes.pop();
+        e = new Expression(o_expr);
+        nodes.push(e);
+    } else {
+        return NULL;
+    }
+    return e;
+}
+
+OrExpression* Parser::or_expr()
+{
+    OrExpression* e;
     if (and_expr()) {
-        BinaryExprOp* b = new BinaryExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AndExpression*>(nodes.top()));
+        BinaryOrExprOp* b = new BinaryOrExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AndExpression*>(nodes.top()));
         nodes.pop();
 
         Token t = peek();
@@ -130,11 +152,11 @@ Expression* Parser::expr()
             Token op = consume();
             AndExpression* next_expr = and_expr();
             nodes.pop();
-            b = new BinaryExprOp(op, b, next_expr);
+            b = new BinaryOrExprOp(op, b, next_expr);
             t = peek();
         }
 
-        e = new Expression(b);
+        e = new OrExpression(b);
         nodes.push(e);
     } else {
         return NULL;
@@ -154,7 +176,7 @@ Factor* Parser::fact()
         f = new Factor(new IntLiteral(t.value));
     } else if (peek().type == TokenType::LPAREN) {
         consume_and_check(TokenType::LPAREN);
-        Expression* e = expr();
+        OrExpression* e = or_expr();
         nodes.pop(); /* not needing the stack */
         consume_and_check(TokenType::RPAREN);
 
@@ -179,20 +201,27 @@ Factor* Parser::fact()
 
 Function* Parser::func()
 {
-    Function* f;
+    Function* f = nullptr;
     consume_and_check(TokenType::INT);
     std::string name = consume_and_check(TokenType::IDENTIFIER).value;
     consume_and_check(TokenType::LPAREN);
     consume_and_check(TokenType::RPAREN);
     consume_and_check(TokenType::LBRACE);
-    if (stm()) {
-        Statement* s = static_cast<Statement*>(nodes.top());
-        f = new Function(name, s);
-        nodes.pop();
-        nodes.push(f);
-    } else {
-        return NULL;
+    std::vector<Statement*> statements {};
+    while (peek().type != TokenType::RBRACE) {
+        if (stm()) {
+            Statement* s = static_cast<Statement*>(nodes.top());
+            nodes.pop();
+            statements.push_back(s);
+        } else {
+            return NULL;
+        }
     }
+    if (statements.empty())
+        f = new Function(name);
+    else
+        f = new Function(name, statements);
+    nodes.push(f);
     consume_and_check(TokenType::RBRACE);
     return f;
 }
@@ -224,15 +253,30 @@ RelationalExpression* Parser::rel_expr()
 Statement* Parser::stm()
 {
     Statement* s;
-    consume_and_check(TokenType::RETURN);
-    if (expr()) {
-        Expression* e = static_cast<Expression*>(nodes.top());
-        s = new Statement(e);
+    if (peek().type == TokenType::RETURN) {
+        consume();
+        Expression* e = expr();
         nodes.pop();
-        nodes.push(s);
+        s = new Statement(e, true);
+    } else if (peek().type == TokenType::INT) {
+        consume();
+        std::string id = consume_and_check(TokenType::IDENTIFIER).value;
+        Expression* e = nullptr;
+        if (peek().type == TokenType::ASSIGN) {
+            consume();
+            e = expr();
+            nodes.pop();
+        }
+
+        s = new Statement(e, id);
+    } else if (expr()) {
+        Expression* e = static_cast<Expression*>(nodes.top());
+        nodes.pop();
+        s = new Statement(e, false);
     } else {
         return NULL;
     }
+    nodes.push(s);
     consume_and_check(TokenType::SEMICOLON);
     return s;
 }

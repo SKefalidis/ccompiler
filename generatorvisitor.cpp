@@ -35,6 +35,16 @@ void GeneratorVisitor::visit(EqualityExpression* expr)
 
 void GeneratorVisitor::visit(Expression* expr)
 {
+    if (expr->or_expr) {
+        expr->or_expr->accept(this);
+    } else {
+        expr->expr->accept(this);
+        output << "\tmovl \t%eax, " << variable_map.at(expr->id) << "(%ebp)" << std::endl;
+    }
+}
+
+void GeneratorVisitor::visit(OrExpression* expr)
+{
     generate_binary_op(expr->binary_op);
 }
 
@@ -47,6 +57,8 @@ void GeneratorVisitor::visit(Factor* fact)
         output << "\tmovl\t" << "$" << constant << ", %eax" << std::endl;
     } else if (fact->expr) {
         fact->expr->accept(this);
+    } else if (!fact->variable.empty()) {
+        output << "\tmovl \t" << variable_map.at(fact->variable) << "(%ebp), %eax" << std::endl;
     } else {
         fact->inner_factor->accept(this);
         fact->unary_op->accept(this);
@@ -55,13 +67,29 @@ void GeneratorVisitor::visit(Factor* fact)
 
 void GeneratorVisitor::visit(Function* func)
 {
-    output << " .globl " << func->name << std::endl;
+    stack_index = -4;
     output << func->name << ":" << std::endl;
-    func->stm->accept(this);
+
+    output << "\tpush \t%ebp" << std::endl;
+    output << "\tmovl \t%esp, %ebp" << std::endl;
+
+    for (auto& x : func->stm) {
+        x->accept(this);
+    }
+
+    // if the last instruction isn't a return statement, return 0
+    if (func->stm.empty() || !func->stm.back()->ret) {
+        output << "\tmovl \t$0, %eax" << std::endl;
+    }
+
+    output << "\tmovl \t%ebp, %esp" << std::endl;
+    output << "\tpop \t%ebp" << std::endl;
+    output << "\tret" << std::endl;
 }
 
 void GeneratorVisitor::visit(Goal* goal)
 {
+    output << " .globl " << goal->func->name << std::endl;
     goal->func->accept(this);
 }
 
@@ -77,8 +105,23 @@ void GeneratorVisitor::visit(RelationalExpression* expr)
 
 void GeneratorVisitor::visit(Statement* stm)
 {
-    stm->expr->accept(this);
-    output << "\tret" << std::endl;
+    if (stm->ret) { /* return statement */
+        stm->expr->accept(this);
+    } else if (stm->id.empty()) { /* exp; */
+        stm->expr->accept(this);
+    } else { /* declare (& define) variable */
+        if (variable_map.find(stm->id) != variable_map.end()) {
+            std::cerr << "Double declaration" << std::endl;
+            exit(1);
+        }
+        variable_map.insert({stm->id, stack_index});
+        stack_index -= 4;
+        if (stm->expr) {
+            stm->expr->accept(this);
+            output << "\tpushl \t%eax" << std::endl;
+            output << "\tmovl \t%eax, " << variable_map.at(stm->id) << "(%ebp)" << std::endl;
+        }
+    }
 }
 
 void GeneratorVisitor::visit(Term* term)
@@ -167,7 +210,7 @@ void GeneratorVisitor::generate_binary_op(BinaryEqExprOp* binary_op)
     }
 }
 
-void GeneratorVisitor::generate_binary_op(BinaryExprOp* binary_op)
+void GeneratorVisitor::generate_binary_op(BinaryOrExprOp* binary_op)
 {
     if (binary_op->op.type == TokenType::INVALID) {
         binary_op->next_expr->accept(this);

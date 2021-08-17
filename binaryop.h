@@ -22,13 +22,13 @@ public:
     Token op;
 };
 
-class BinaryExprOp
+class BinaryOrExprOp
 {
 public:
-    BinaryExprOp(Token op, BinaryExprOp* expr, AndExpression* next_expr);
+    BinaryOrExprOp(Token op, BinaryOrExprOp* expr, AndExpression* next_expr);
     void print(int tabs);
 
-    BinaryExprOp* expr;
+    BinaryOrExprOp* expr;
     AndExpression* next_expr;
     Token op;
 };

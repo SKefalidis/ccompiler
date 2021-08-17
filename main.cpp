@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     auto tokens = lex.lex();
     Parser parser(tokens);
     auto g = parser.parse();
-    print_ast(g);
+//    print_ast(g);
     generate(g);
 
     pid_t pid = fork();

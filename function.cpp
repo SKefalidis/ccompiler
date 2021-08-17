@@ -1,10 +1,16 @@
 #include <iostream>
 #include "function.h"
 
-Function::Function(std::string name, Statement* stm)
+Function::Function(std::string name)
+    : name(name)
+{
+    ;
+}
+
+Function::Function(std::string name, std::vector<Statement*> stm)
     : name(name), stm(stm)
 {
-
+    ;
 }
 
 void Function::accept(Visitor* v)
@@ -16,5 +22,7 @@ void Function::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "FUNCTION" << std::endl;
     std::cout << tabs_string(tabs) << name << std::endl;
-    stm->print_node(tabs + 1);
+    for (auto& x : stm) {
+        x->print_node(tabs + 1);
+    }
 }

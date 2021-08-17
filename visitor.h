@@ -6,6 +6,7 @@ class AdditiveExpression;
 class AndExpression;
 class EqualityExpression;
 class Expression;
+class OrExpression;
 class Factor;
 class Function;
 class Goal;
@@ -22,6 +23,7 @@ public:
     virtual void visit(AndExpression*           expr) = 0;
     virtual void visit(EqualityExpression*      expr) = 0;
     virtual void visit(Expression*              expr) = 0;
+    virtual void visit(OrExpression*            expr) = 0;
     virtual void visit(Factor*                  fact) = 0;
     virtual void visit(Function*                func) = 0;
     virtual void visit(Goal*                    goal) = 0;

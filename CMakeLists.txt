@@ -26,5 +26,6 @@ add_executable(ccompiler
     relationalexpression.h relationalexpression.cpp
     equalityexpression.h equalityexpression.cpp
     andexpression.h andexpression.cpp
+    orexpression.h orexpression.cpp
     expression.h expression.cpp
     )

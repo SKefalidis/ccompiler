@@ -1,8 +1,14 @@
 #include <iostream>
 #include "expression.h"
 
-Expression::Expression(BinaryExprOp* binary_op)
-    : binary_op(binary_op)
+Expression::Expression(OrExpression* expr)
+    : or_expr(expr)
+{
+    ;
+}
+
+Expression::Expression(std::string id, Expression* expr)
+    : id(id), expr(expr)
 {
     ;
 }
@@ -15,5 +21,10 @@ void Expression::accept(Visitor* v)
 void Expression::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "EXPRESSION" << std::endl;
-    binary_op->print(tabs + 1);
+    if (or_expr) {
+        or_expr->print_node(tabs + 1);
+    } else {
+        std::cout << tabs_string(tabs) << id << " = " << std::endl;
+        expr->print_node(tabs + 1);
+    }
 }

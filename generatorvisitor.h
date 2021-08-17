@@ -4,6 +4,7 @@
 #include <fstream>
 #include <stack>
 #include <string>
+#include <unordered_map>
 #include "visitor.h"
 #include "binaryop.h"
 
@@ -17,6 +18,7 @@ public:
     void visit(AndExpression*           expr)  override;
     void visit(EqualityExpression*      expr)  override;
     void visit(Expression*              expr)  override;
+    void visit(OrExpression*            expr)  override;
     void visit(Factor*                  fact)  override;
     void visit(Function*                func)  override;
     void visit(Goal*                    goal)  override;
@@ -30,7 +32,7 @@ private:
     void generate_binary_op(BinaryAddExprOp* binary_op);
     void generate_binary_op(BinaryAndExprOp* binary_op);
     void generate_binary_op(BinaryEqExprOp* binary_op);
-    void generate_binary_op(BinaryExprOp* binary_op);
+    void generate_binary_op(BinaryOrExprOp* binary_op);
     void generate_binary_op(BinaryRelExprOp* binary_op);
     void generate_binary_op(BinaryTermOp* binary_op);
     std::string get_label();
@@ -38,6 +40,9 @@ private:
     std::ofstream& output;
     std::stack<std::string> results;
     int label_counter { 0 };
+
+    std::unordered_map<std::string, int> variable_map {};
+    int stack_index;
 };
 
 #endif // GENERATORVISITOR_H

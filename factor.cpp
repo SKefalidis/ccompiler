@@ -13,7 +13,7 @@ Factor::Factor(UnaryOperator* op, Factor* factor)
     ;
 }
 
-Factor::Factor(Expression* expr)
+Factor::Factor(OrExpression* expr)
     : expr(expr)
 {
     ;
@@ -39,5 +39,7 @@ void Factor::print_node(int tabs) const
 
     } else if (expr) {
         expr->print_node(tabs + 1);
+    } else if (!variable.empty()) {
+        std::cout << tabs_string(tabs + 1) << variable << std::endl;
     }
 }

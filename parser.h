@@ -12,6 +12,7 @@
 #include "andexpression.h"
 #include "equalityexpression.h"
 #include "expression.h"
+#include "orexpression.h"
 #include "factor.h"
 #include "function.h"
 #include "literal.h"
@@ -29,7 +30,7 @@ public:
     Goal* parse();
 
 private:
-    Token peek() const;
+    Token peek(int offset = 0) const;
     Token consume();
     Token consume_and_check(TokenType expected);
     void parse_error(std::string error);
@@ -38,6 +39,7 @@ private:
     AndExpression*          and_expr();
     EqualityExpression*     eq_expr();
     Expression*             expr();
+    OrExpression*           or_expr();
     Factor*                 fact();
     Function*               func();
     RelationalExpression*   rel_expr();
@@ -46,9 +48,9 @@ private:
     UnaryOperator*          unary_op();
 
     std::vector<Token> tokens;
-    int current_token;
+    int current_token           { 0 };
 
-    std::stack<void*> nodes;
+    std::stack<void*> nodes     {};
 };
 
 #endif // PARSER_H

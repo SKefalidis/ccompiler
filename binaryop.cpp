@@ -24,13 +24,13 @@ void BinaryTermOp::print(int tabs)
     next_fact->print_node(tabs);
 }
 
-BinaryExprOp::BinaryExprOp(Token op, BinaryExprOp* expr, AndExpression* next_expr)
+BinaryOrExprOp::BinaryOrExprOp(Token op, BinaryOrExprOp* expr, AndExpression* next_expr)
     : op(op), expr(expr), next_expr(next_expr)
 {
     ;
 }
 
-void BinaryExprOp::print(int tabs)
+void BinaryOrExprOp::print(int tabs)
 {
     if (op.type != TokenType::INVALID) {
         std::cout << Node::tabs_string(tabs) << tokenTypeStrings.at(op.type) << std::endl;
