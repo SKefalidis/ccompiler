@@ -1,10 +1,15 @@
 #include <iostream>
 #include "parser.h"
 
+
 Parser::Parser(std::vector<Token> tokens) : tokens(tokens)
 {
     ;
 }
+
+//---------------------------------------------------------
+//   utility functions
+//---------------------------------------------------------
 
 Token Parser::peek(int offset) const
 {
@@ -26,20 +31,30 @@ Token Parser::consume_and_check(TokenType expected)
     return t;
 }
 
+void* Parser::get_and_pop()
+{
+    auto x = nodes.top();
+    nodes.pop();
+    return x;
+}
+
 void Parser::parse_error(std::string error)
 {
     std::cerr << "Expected '" + error + "'" << std::endl;
     throw "Expected '" + error + "'";
 }
 
+//---------------------------------------------------------
+//   parsing
+//---------------------------------------------------------
+
 Goal* Parser::parse()
 {
     Goal* g;
     current_token = 0;
     if (func() && peek().type == TokenType::END_OF_FILE) {
-        Function* f = static_cast<Function*>(nodes.top());
+        Function* f = static_cast<Function*>(get_and_pop());
         g = new Goal(f);
-        nodes.pop();
         return g;
     } else {
         return NULL;
@@ -50,9 +65,7 @@ AdditiveExpression* Parser::add_expr()
 {
     AdditiveExpression* e;
     if (term()) {
-        BinaryAddExprOp* b = new BinaryAddExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Term*>(nodes.top()));
-        nodes.pop();
-
+        BinaryAddExprOp* b = new BinaryAddExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Term*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::PLUS || t.type == TokenType::MINUS) {
             Token op = consume();
@@ -74,9 +87,7 @@ AndExpression* Parser::and_expr()
 {
     AndExpression* e;
     if (eq_expr()) {
-        BinaryAndExprOp* b = new BinaryAndExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<EqualityExpression*>(nodes.top()));
-        nodes.pop();
-
+        BinaryAndExprOp* b = new BinaryAndExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<EqualityExpression*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::AND) {
             Token op = consume();
@@ -98,8 +109,7 @@ EqualityExpression* Parser::eq_expr()
 {
     EqualityExpression* e;
     if (rel_expr()) {
-        BinaryEqExprOp* b = new BinaryEqExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<RelationalExpression*>(nodes.top()));
-        nodes.pop();
+        BinaryEqExprOp* b = new BinaryEqExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<RelationalExpression*>(get_and_pop()));
 
         Token t = peek();
         while (t.type == TokenType::EQ || t.type == TokenType::NEQ) {
@@ -130,8 +140,7 @@ Expression* Parser::expr()
         e = new Expression(id, r_expr);
         nodes.push(e);
     } else if (or_expr()) {
-        OrExpression* o_expr = static_cast<OrExpression*>(nodes.top());
-        nodes.pop();
+        OrExpression* o_expr = static_cast<OrExpression*>(get_and_pop());
         e = new Expression(o_expr);
         nodes.push(e);
     } else {
@@ -144,9 +153,7 @@ OrExpression* Parser::or_expr()
 {
     OrExpression* e;
     if (and_expr()) {
-        BinaryOrExprOp* b = new BinaryOrExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AndExpression*>(nodes.top()));
-        nodes.pop();
-
+        BinaryOrExprOp* b = new BinaryOrExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AndExpression*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::OR) {
             Token op = consume();
@@ -186,11 +193,8 @@ Factor* Parser::fact()
 
         f = new Factor(variable);
     } else if (unary_op() && fact()) {
-        Factor* inner_factor = static_cast<Factor*>(nodes.top());
-        nodes.pop();
-        UnaryOperator* op = static_cast<UnaryOperator*>(nodes.top());
-        nodes.pop();
-
+        Factor* inner_factor = static_cast<Factor*>(get_and_pop());
+        UnaryOperator* op = static_cast<UnaryOperator*>(get_and_pop());
         f = new Factor(op, inner_factor);
     } else {
         return NULL;
@@ -210,8 +214,7 @@ Function* Parser::func()
     std::vector<Statement*> statements {};
     while (peek().type != TokenType::RBRACE) {
         if (stm()) {
-            Statement* s = static_cast<Statement*>(nodes.top());
-            nodes.pop();
+            Statement* s = static_cast<Statement*>(get_and_pop());
             statements.push_back(s);
         } else {
             return NULL;
@@ -230,9 +233,7 @@ RelationalExpression* Parser::rel_expr()
 {
     RelationalExpression* e;
     if (add_expr()) {
-        BinaryRelExprOp* b = new BinaryRelExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AdditiveExpression*>(nodes.top()));
-        nodes.pop();
-
+        BinaryRelExprOp* b = new BinaryRelExprOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<AdditiveExpression*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::LT || t.type == TokenType::LE || t.type == TokenType::GT || t.type == TokenType::GE) {
             Token op = consume();
@@ -270,8 +271,7 @@ Statement* Parser::stm()
 
         s = new Statement(e, id);
     } else if (expr()) {
-        Expression* e = static_cast<Expression*>(nodes.top());
-        nodes.pop();
+        Expression* e = static_cast<Expression*>(get_and_pop());
         s = new Statement(e, false);
     } else {
         return NULL;
@@ -285,9 +285,7 @@ Term* Parser::term()
 {
     Term* term;
     if (fact()) {
-        BinaryTermOp* b = new BinaryTermOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Factor*>(nodes.top()));
-        nodes.pop();
-
+        BinaryTermOp* b = new BinaryTermOp(Token(TokenType::INVALID, "INVALID"), NULL, static_cast<Factor*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::STAR || t.type == TokenType::SLASH) {
             Token op = consume();

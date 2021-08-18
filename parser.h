@@ -33,6 +33,9 @@ private:
     Token peek(int offset = 0) const;
     Token consume();
     Token consume_and_check(TokenType expected);
+
+    void* get_and_pop();
+
     void parse_error(std::string error);
 
     AdditiveExpression*     add_expr();

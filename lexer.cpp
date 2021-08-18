@@ -5,23 +5,38 @@
 using namespace std;
 
 
-
 unordered_map<string, TokenType> keywords {
     { "return",  TokenType::RETURN  },
     { "int",     TokenType::INT     },
 };
+
 
 Lexer::Lexer(std::ifstream& file) : file (file)
 {
     ;
 }
 
+//---------------------------------------------------------
+//   utility functions
+//---------------------------------------------------------
+
+char Lexer::consume()
+{
+    file.read(&c, 1);
+    column++;
+    return c;
+}
+
+//---------------------------------------------------------
+//   lexing
+//---------------------------------------------------------
+
 std::vector<Token> Lexer::lex()
 {
     vector<Token> tokens;
 
     if (!file.is_open()) {
-        cerr << "Must open file to user lexer!" << endl;
+        cerr << "Must open file to use lexer!" << endl;
         return tokens;
     }
 
@@ -29,6 +44,7 @@ std::vector<Token> Lexer::lex()
     while (true) {
         c = file.peek();
 
+        /* check if we have reached the end of the file */
         if (file.eof()) {
             tokens.push_back(Token(TokenType::END_OF_FILE, "EOF"));
             break;
@@ -36,6 +52,7 @@ std::vector<Token> Lexer::lex()
 
         switch (c) {
 
+        /* symbols */
         case '{':
             consume();
             tokens.push_back(Token(TokenType::LBRACE, "{"));
@@ -133,6 +150,7 @@ std::vector<Token> Lexer::lex()
             }
             break;
 
+        /* whitespace */
         case ' ':
             column++;
             consume();
@@ -147,6 +165,7 @@ std::vector<Token> Lexer::lex()
             consume();
             break;
 
+        /* integer literals, identifiers */
         default:
             if (isdigit(c)) {
                 current = integer_literal();
@@ -201,11 +220,4 @@ std::string Lexer::integer_literal()
         }
     }
     return current_string;
-}
-
-char Lexer::consume()
-{
-    file.read(&c, 1);
-    column++;
-    return c;
 }
