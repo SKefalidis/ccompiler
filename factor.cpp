@@ -1,5 +1,7 @@
 #include <iostream>
 #include "factor.h"
+#include "expression.h"
+
 
 Factor::Factor(Literal* literal)
     : value(literal)
@@ -13,7 +15,7 @@ Factor::Factor(UnaryOperator* op, Factor* factor)
     ;
 }
 
-Factor::Factor(OrExpression* expr)
+Factor::Factor(Expression* expr)
     : expr(expr)
 {
     ;

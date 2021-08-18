@@ -4,7 +4,6 @@
 #include <string>
 #include "visitor.h"
 #include "node.h"
-#include "orexpression.h"
 #include "literal.h"
 #include "unaryoperator.h"
 
@@ -14,7 +13,7 @@ class Factor : public Node
 public:
     Factor(Literal* literal);
     Factor(UnaryOperator* op, Factor* factor);
-    Factor(OrExpression* expr);
+    Factor(Expression* expr);
     Factor(std::string variable);
 
     void accept(Visitor* v) override;
@@ -23,7 +22,7 @@ public:
     Literal* value          { nullptr };
     UnaryOperator* unary_op { nullptr };
     Factor* inner_factor    { nullptr };
-    OrExpression* expr      { nullptr };
+    Expression* expr        { nullptr };
     std::string variable    { "" };
 };
 

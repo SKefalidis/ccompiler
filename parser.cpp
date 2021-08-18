@@ -173,7 +173,7 @@ Factor* Parser::fact()
         f = new Factor(variable);
     } else if (peek().type == TokenType::LPAREN) {
         consume();
-        OrExpression* e = or_expr();
+        Expression* e = expr();
         nodes.pop();
         consume_and_check(TokenType::RPAREN);
         f = new Factor(e);
