@@ -3,16 +3,20 @@
 
 #include "node.h"
 #include "visitor.h"
-#include "binaryop.h"
+#include "token.h"
+
 
 class RelationalExpression : public Node
 {
 public:
-    RelationalExpression(BinaryRelExprOp* binary_op);
+    RelationalExpression(AdditiveExpression* expr);
+    RelationalExpression(AdditiveExpression* expr, Token op, RelationalExpression* tail);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    BinaryRelExprOp* binary_op;
+    AdditiveExpression* expr;
+    Token op;
+    RelationalExpression* tail;
 };
 
 #endif // RELATIONALEXPRESSION_H

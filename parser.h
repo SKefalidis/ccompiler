@@ -6,7 +6,6 @@
 #include <string>
 #include "token.h"
 
-#include "binaryop.h"
 #include "goal.h"
 #include "additiveexpression.h"
 #include "andexpression.h"
@@ -17,7 +16,6 @@
 #include "function.h"
 #include "literal.h"
 #include "relationalexpression.h"
-#include "return.h"
 #include "statement.h"
 #include "term.h"
 #include "unaryoperator.h"

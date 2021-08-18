@@ -1,8 +1,15 @@
 #include <iostream>
 #include "relationalexpression.h"
+#include "additiveexpression.h"
 
-RelationalExpression::RelationalExpression(BinaryRelExprOp* binary_op)
-    : binary_op(binary_op)
+RelationalExpression::RelationalExpression(AdditiveExpression* expr)
+    : expr(expr)
+{
+    ;
+}
+
+RelationalExpression::RelationalExpression(AdditiveExpression* expr, Token op, RelationalExpression* tail)
+    : expr(expr), op(op), tail(tail)
 {
     ;
 }
@@ -15,5 +22,11 @@ void RelationalExpression::accept(Visitor* v)
 void RelationalExpression::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "RELATIONAL EXPRESSION" << std::endl;
-    binary_op->print(tabs + 1);
+    if (op.type != TokenType::INVALID) {
+        std::cout << Node::tabs_string(tabs) << tokenTypeStrings.at(op.type) << std::endl;
+    }
+    if (tail) {
+        tail->print_node(tabs);
+    }
+    expr->print_node(tabs);
 }

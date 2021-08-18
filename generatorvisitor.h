@@ -6,7 +6,6 @@
 #include <string>
 #include <unordered_map>
 #include "visitor.h"
-#include "binaryop.h"
 
 
 class GeneratorVisitor : public Visitor
@@ -29,12 +28,6 @@ public:
     void visit(UnaryOperator*           op)    override;
 
 private:
-    void generate_binary_op(BinaryAddExprOp* binary_op);
-    void generate_binary_op(BinaryAndExprOp* binary_op);
-    void generate_binary_op(BinaryEqExprOp* binary_op);
-    void generate_binary_op(BinaryOrExprOp* binary_op);
-    void generate_binary_op(BinaryRelExprOp* binary_op);
-    void generate_binary_op(BinaryTermOp* binary_op);
     std::string get_label();
 
     std::ofstream& output;

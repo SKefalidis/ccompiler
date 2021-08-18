@@ -3,16 +3,20 @@
 
 #include "node.h"
 #include "visitor.h"
-#include "binaryop.h"
+#include "token.h"
+
 
 class OrExpression : public Node
 {
-public:
-    OrExpression(BinaryOrExprOp* binary_op);
+public:  
+    OrExpression(AndExpression* expr);
+    OrExpression(AndExpression* expr, Token op, OrExpression* tail);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    BinaryOrExprOp* binary_op;
+    AndExpression* expr;
+    Token op;
+    OrExpression* tail;
 };
 
 #endif // OREXPRESSION_H

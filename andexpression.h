@@ -3,17 +3,20 @@
 
 #include "node.h"
 #include "visitor.h"
-#include "binaryop.h"
+#include "token.h"
 
 
 class AndExpression : public Node
 {
-public:
-    AndExpression(BinaryAndExprOp* binary_op);
+public:   
+    AndExpression(EqualityExpression* expr);
+    AndExpression(EqualityExpression* expr, Token op, AndExpression* tail);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    BinaryAndExprOp* binary_op;
+    EqualityExpression* expr;
+    Token op;
+    AndExpression* tail;
 };
 
 #endif // ANDEXPRESSION_H

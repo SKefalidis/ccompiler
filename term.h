@@ -3,17 +3,20 @@
 
 #include "node.h"
 #include "visitor.h"
-#include "binaryop.h"
+#include "token.h"
 
 
 class Term : public Node
 {
 public:
-    Term(BinaryTermOp* binary_op);
+    Term(Factor* fact);
+    Term(Factor* fact, Token op, Term* tail);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    BinaryTermOp* binary_op;
+    Factor* fact;
+    Token op;
+    Term* tail;
 };
 
 #endif // TERM_H

@@ -20,7 +20,6 @@ add_executable(ccompiler
     unaryoperator.h unaryoperator.cpp
     term.h term.cpp
     factor.h factor.cpp
-    binaryop.h binaryop.cpp
     node.h node.cpp
     relationalexpression.h relationalexpression.cpp
     equalityexpression.h equalityexpression.cpp

@@ -66,16 +66,15 @@ AdditiveExpression* Parser::add_expr()
     AdditiveExpression* e { nullptr };
 
     if (term()) {
-        BinaryAddExprOp* b = new BinaryAddExprOp(Token(TokenType::INVALID, "INVALID"), nullptr, static_cast<Term*>(get_and_pop()));
+        e = new AdditiveExpression(static_cast<Term*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::PLUS || t.type == TokenType::MINUS) {
             Token op = consume();
             Term* next_term = term();
             nodes.pop();
-            b = new BinaryAddExprOp(op, b, next_term);
+            e = new AdditiveExpression(next_term, op, e);
             t = peek();
         }
-        e = new AdditiveExpression(b);
         nodes.push(e);
     }
 
@@ -87,16 +86,15 @@ AndExpression* Parser::and_expr()
     AndExpression* e { nullptr };
 
     if (eq_expr()) {
-        BinaryAndExprOp* b = new BinaryAndExprOp(Token(TokenType::INVALID, "INVALID"), nullptr, static_cast<EqualityExpression*>(get_and_pop()));
+        e = new AndExpression(static_cast<EqualityExpression*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::AND) {
             Token op = consume();
             EqualityExpression* next_expr = eq_expr();
             nodes.pop();
-            b = new BinaryAndExprOp(op, b, next_expr);
+            e = new AndExpression(next_expr, op, e);
             t = peek();
         }
-        e = new AndExpression(b);
         nodes.push(e);
     }
 
@@ -108,16 +106,15 @@ EqualityExpression* Parser::eq_expr()
     EqualityExpression* e { nullptr };
 
     if (rel_expr()) {
-        BinaryEqExprOp* b = new BinaryEqExprOp(Token(TokenType::INVALID, "INVALID"), nullptr, static_cast<RelationalExpression*>(get_and_pop()));
+        e = new EqualityExpression(static_cast<RelationalExpression*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::EQ || t.type == TokenType::NEQ) {
             Token op = consume();
             RelationalExpression* next_expr = rel_expr();
             nodes.pop();
-            b = new BinaryEqExprOp(op, b, next_expr);
+            e = new EqualityExpression(next_expr, op, e);
             t = peek();
         }
-        e = new EqualityExpression(b);
         nodes.push(e);
     }
 
@@ -149,16 +146,15 @@ OrExpression* Parser::or_expr()
     OrExpression* e { nullptr };
 
     if (and_expr()) {
-        BinaryOrExprOp* b = new BinaryOrExprOp(Token(TokenType::INVALID, "INVALID"), nullptr, static_cast<AndExpression*>(get_and_pop()));
+        e = new OrExpression(static_cast<AndExpression*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::OR) {
             Token op = consume();
             AndExpression* next_expr = and_expr();
             nodes.pop();
-            b = new BinaryOrExprOp(op, b, next_expr);
+            e = new OrExpression(next_expr, op, e);
             t = peek();
         }
-        e = new OrExpression(b);
         nodes.push(e);
     }
 
@@ -223,16 +219,15 @@ RelationalExpression* Parser::rel_expr()
     RelationalExpression* e { nullptr };
 
     if (add_expr()) {
-        BinaryRelExprOp* b = new BinaryRelExprOp(Token(TokenType::INVALID, "INVALID"), nullptr, static_cast<AdditiveExpression*>(get_and_pop()));
+        e = new RelationalExpression(static_cast<AdditiveExpression*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::LT || t.type == TokenType::LE || t.type == TokenType::GT || t.type == TokenType::GE) {
             Token op = consume();
             AdditiveExpression* next_expr = add_expr();
             nodes.pop();
-            b = new BinaryRelExprOp(op, b, next_expr);
+            e = new RelationalExpression(next_expr, op, e);
             t = peek();
         }
-        e = new RelationalExpression(b);
         nodes.push(e);
     }
 
@@ -275,17 +270,15 @@ Term* Parser::term()
     Term* term { nullptr };
 
     if (fact()) {
-        BinaryTermOp* b = new BinaryTermOp(Token(TokenType::INVALID, "INVALID"), nullptr, static_cast<Factor*>(get_and_pop()));
+        term = new Term(static_cast<Factor*>(get_and_pop()));
         Token t = peek();
         while (t.type == TokenType::STAR || t.type == TokenType::SLASH) {
             Token op = consume();
             Factor* next_fact = fact();
             nodes.pop();
-            b = new BinaryTermOp(op, b, next_fact);
+            term = new Term(next_fact, op, term);
             t = peek();
         }
-
-        term = new Term(b);
         nodes.push(term);
     }
 

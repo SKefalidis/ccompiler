@@ -1,9 +1,16 @@
 #include <iostream>
 #include "equalityexpression.h"
+#include "relationalexpression.h"
 
 
-EqualityExpression::EqualityExpression(BinaryEqExprOp* binary_op)
-    : binary_op(binary_op)
+EqualityExpression::EqualityExpression(RelationalExpression* expr)
+    : expr(expr)
+{
+    ;
+}
+
+EqualityExpression::EqualityExpression(RelationalExpression* expr, Token op, EqualityExpression* tail)
+    : expr(expr), op(op), tail(tail)
 {
     ;
 }
@@ -16,5 +23,11 @@ void EqualityExpression::accept(Visitor* v)
 void EqualityExpression::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "EQUALITY EXPRESSION" << std::endl;
-    binary_op->print(tabs + 1);
+    if (op.type != TokenType::INVALID) {
+        std::cout << Node::tabs_string(tabs) << tokenTypeStrings.at(op.type) << std::endl;
+    }
+    if (tail) {
+        tail->print_node(tabs);
+    }
+    expr->print_node(tabs);
 }

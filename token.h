@@ -41,6 +41,11 @@ extern std::unordered_map<TokenType, std::string> tokenTypeStrings;
 
 struct Token
 {
+    Token()
+    {
+        type = TokenType::INVALID;
+        value = tokenTypeStrings.at(type);
+    }
     Token(TokenType type, std::string value)
     {
         this->type = type;

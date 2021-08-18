@@ -1,8 +1,16 @@
 #include <iostream>
 #include "term.h"
+#include "factor.h"
 
-Term::Term(BinaryTermOp* binary_op)
-    : binary_op(binary_op)
+
+Term::Term(Factor* fact)
+    : fact(fact)
+{
+    ;
+}
+
+Term::Term(Factor* fact, Token op, Term* tail)
+    : fact(fact), op(op), tail(tail)
 {
     ;
 }
@@ -15,5 +23,11 @@ void Term::accept(Visitor* v)
 void Term::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "TERM" << std::endl;
-    binary_op->print(tabs + 1);
+    if (op.type != TokenType::INVALID) {
+        std::cout << Node::tabs_string(tabs) << tokenTypeStrings.at(op.type) << std::endl;
+    }
+    if (tail) {
+        tail->print_node(tabs);
+    }
+    fact->print_node(tabs);
 }

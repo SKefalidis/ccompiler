@@ -3,16 +3,20 @@
 
 #include "node.h"
 #include "visitor.h"
-#include "binaryop.h"
+#include "token.h"
+
 
 class EqualityExpression : public Node
 {
 public:
-    EqualityExpression(BinaryEqExprOp* binary_op);
+    EqualityExpression(RelationalExpression* expr);
+    EqualityExpression(RelationalExpression* expr, Token op, EqualityExpression* tail);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    BinaryEqExprOp* binary_op;
+    RelationalExpression* expr;
+    Token op;
+    EqualityExpression* tail;
 };
 
 #endif // EQUALITYEXPRESSION_H

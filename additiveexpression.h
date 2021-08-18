@@ -4,17 +4,20 @@
 #include <string>
 #include "visitor.h"
 #include "node.h"
-#include "binaryop.h"
+#include "token.h"
 
 
 class AdditiveExpression : public Node
 {
 public:
-    AdditiveExpression(BinaryAddExprOp* binary_op);
+    AdditiveExpression(Term* term);
+    AdditiveExpression(Term* term, Token op, AdditiveExpression* tail);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    BinaryAddExprOp* binary_op;
+    Term* term;
+    Token op;
+    AdditiveExpression* tail;
 };
 
 #endif // ADDITIVEEXPRESSION_H

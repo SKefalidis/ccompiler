@@ -1,8 +1,15 @@
 #include <iostream>
 #include "andexpression.h"
+#include "equalityexpression.h"
 
-AndExpression::AndExpression(BinaryAndExprOp* binary_op)
-    : binary_op(binary_op)
+AndExpression::AndExpression(EqualityExpression* expr)
+    : expr(expr)
+{
+    ;
+}
+
+AndExpression::AndExpression(EqualityExpression* expr, Token op, AndExpression* tail)
+    : expr(expr), op(op), tail(tail)
 {
     ;
 }
@@ -15,5 +22,11 @@ void AndExpression::accept(Visitor* v)
 void AndExpression::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "AND EXPRESSION" << std::endl;
-    binary_op->print(tabs + 1);
+    if (op.type != TokenType::INVALID) {
+        std::cout << Node::tabs_string(tabs) << tokenTypeStrings.at(op.type) << std::endl;
+    }
+    if (tail) {
+        tail->print_node(tabs);
+    }
+    expr->print_node(tabs);
 }
