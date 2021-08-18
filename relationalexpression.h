@@ -14,9 +14,9 @@ public:
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    AdditiveExpression* expr;
+    AdditiveExpression* expr    { nullptr };
     Token op;
-    RelationalExpression* tail;
+    RelationalExpression* tail  { nullptr };
 };
 
 #endif // RELATIONALEXPRESSION_H

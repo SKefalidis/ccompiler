@@ -14,9 +14,9 @@ public:
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    EqualityExpression* expr;
+    EqualityExpression* expr    { nullptr };
     Token op;
-    AndExpression* tail;
+    AndExpression* tail         { nullptr };
 };
 
 #endif // ANDEXPRESSION_H

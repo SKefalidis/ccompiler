@@ -15,6 +15,9 @@ public:
 
     void visit(AdditiveExpression*      expr)  override;
     void visit(AndExpression*           expr)  override;
+    void visit(BlockItem*               item)  override;
+    void visit(CondExpression*          expr)  override;
+    void visit(Declaration*             decl)  override;
     void visit(EqualityExpression*      expr)  override;
     void visit(Expression*              expr)  override;
     void visit(OrExpression*            expr)  override;

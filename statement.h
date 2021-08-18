@@ -11,13 +11,14 @@ class Statement : public Node
 {
 public:
     Statement(Expression* expr, bool ret);
-    Statement(Expression* expr, std::string id);
+    Statement(Expression* expr, Statement* if_stm, Statement* else_stm);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    Expression* expr;
-    std::string id;
-    bool ret;
+    Expression* expr        { nullptr };
+    Statement* if_stm       { nullptr };
+    Statement* else_stm     { nullptr };
+    bool ret                { false };
 };
 
 #endif // STATEMENT_H

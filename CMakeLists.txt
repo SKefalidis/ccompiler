@@ -26,4 +26,7 @@ add_executable(ccompiler
     andexpression.h andexpression.cpp
     orexpression.h orexpression.cpp
     expression.h expression.cpp
+    blockitem.h blockitem.cpp
+    declaration.h declaration.cpp
+    condexpression.h condexpression.cpp
     )

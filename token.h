@@ -17,6 +17,8 @@ enum class TokenType {
     PLUS,
     STAR,
     SLASH,
+    COLON,
+    QUESTION_MARK,
     AND,
     OR,
     EQ,
@@ -29,6 +31,8 @@ enum class TokenType {
 
     RETURN,
     INT,
+    IF,
+    ELSE,
 
     IDENTIFIER,
     INTEGER_LITERAL,

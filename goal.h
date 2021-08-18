@@ -13,7 +13,7 @@ public:
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    Function* func;
+    Function* func { nullptr };
 };
 
 #endif // GOAL_H

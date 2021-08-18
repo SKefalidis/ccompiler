@@ -15,9 +15,9 @@ public:
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    Term* term;
+    Term* term                  { nullptr };
     Token op;
-    AdditiveExpression* tail;
+    AdditiveExpression* tail    { nullptr };
 };
 
 #endif // ADDITIVEEXPRESSION_H

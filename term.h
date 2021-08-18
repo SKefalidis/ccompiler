@@ -14,9 +14,9 @@ public:
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    Factor* fact;
+    Factor* fact    { nullptr };
     Token op;
-    Term* tail;
+    Term* tail      { nullptr };
 };
 
 #endif // TERM_H

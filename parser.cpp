@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include "parser.h"
 
 
@@ -101,6 +101,60 @@ AndExpression* Parser::and_expr()
     return e;
 }
 
+BlockItem* Parser::block_item()
+{
+    BlockItem* b { nullptr };
+
+    if (peek().type == TokenType::INT && decl()) {
+        b = new BlockItem(static_cast<Declaration*>(get_and_pop()));
+    } else if (stm()) {
+        b = new BlockItem(static_cast<Statement*>(get_and_pop()));
+    }
+    nodes.push(b);
+
+    return b;
+}
+
+CondExpression* Parser::cond_expr()
+{
+    CondExpression* e { nullptr };
+
+    if (or_expr()) {
+        OrExpression* or_expr = static_cast<OrExpression*>(get_and_pop());
+        Expression* if_expr { nullptr };
+        CondExpression* else_expr { nullptr };
+        if (peek().type == TokenType::QUESTION_MARK) {
+            consume();
+            if_expr = expr();
+            consume_and_check(TokenType::COLON);
+            else_expr = cond_expr();
+        }
+        e = new CondExpression(or_expr, if_expr, else_expr);
+        nodes.push(e);
+    }
+
+    return e;
+}
+
+Declaration* Parser::decl()
+{
+    Declaration* d { nullptr };
+
+    consume_and_check(TokenType::INT);
+    std::string id = consume_and_check(TokenType::IDENTIFIER).value;
+    Expression* e = nullptr;
+    if (peek().type == TokenType::ASSIGN) {
+        consume();
+        e = expr();
+        nodes.pop();
+    }
+    consume_and_check(TokenType::SEMICOLON);
+    d = new Declaration(id, e);
+    nodes.push(d);
+
+    return d;
+}
+
 EqualityExpression* Parser::eq_expr()
 {
     EqualityExpression* e { nullptr };
@@ -132,9 +186,9 @@ Expression* Parser::expr()
         nodes.pop();
         e = new Expression(id, r_expr);
         nodes.push(e);
-    } else if (or_expr()) {
-        OrExpression* o_expr = static_cast<OrExpression*>(get_and_pop());
-        e = new Expression(o_expr);
+    } else if (cond_expr()) {
+        CondExpression* expr = static_cast<CondExpression*>(get_and_pop());
+        e = new Expression(expr);
         nodes.push(e);
     }
 
@@ -198,16 +252,16 @@ Function* Parser::func()
     consume_and_check(TokenType::LPAREN);
     consume_and_check(TokenType::RPAREN);
     consume_and_check(TokenType::LBRACE);
-    std::vector<Statement*> statements {};
+    std::vector<BlockItem*> items {};
     while (peek().type != TokenType::RBRACE) {
-        if (stm()) {
-            Statement* s = static_cast<Statement*>(get_and_pop());
-            statements.push_back(s);
+        if (block_item()) {
+            BlockItem* b = static_cast<BlockItem*>(get_and_pop()); /* TODO: use `auto` */
+            items.push_back(b);
         } else {
             return nullptr;
         }
     }
-    f = new Function(name, statements);
+    f = new Function(name, items);
     nodes.push(f);
     consume_and_check(TokenType::RBRACE);
 
@@ -243,24 +297,30 @@ Statement* Parser::stm()
         Expression* e = expr();
         nodes.pop();
         s = new Statement(e, true);
-    } else if (peek().type == TokenType::INT) {
+        consume_and_check(TokenType::SEMICOLON);
+    } else if (peek().type == TokenType::IF) {
         consume();
-        std::string id = consume_and_check(TokenType::IDENTIFIER).value;
-        Expression* e = nullptr;
-        if (peek().type == TokenType::ASSIGN) {
+        consume_and_check(TokenType::LPAREN);
+        Expression* e = expr();
+        nodes.pop();
+        consume_and_check(TokenType::RPAREN);
+        Statement* if_stm = stm();
+        nodes.pop();
+        Statement* else_stm { nullptr };
+        if (peek().type == TokenType::ELSE) {
             consume();
-            e = expr();
+            else_stm = stm();
             nodes.pop();
         }
-        s = new Statement(e, id);
+        s = new Statement(e, if_stm, else_stm);
     } else if (expr()) {
         Expression* e = static_cast<Expression*>(get_and_pop());
         s = new Statement(e, false);
+        consume_and_check(TokenType::SEMICOLON);
     } else {
         return nullptr;
     }
     nodes.push(s);
-    consume_and_check(TokenType::SEMICOLON);
 
     return s;
 }

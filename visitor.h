@@ -4,6 +4,9 @@
 class Node;
 class AdditiveExpression;
 class AndExpression;
+class BlockItem;
+class CondExpression;
+class Declaration;
 class EqualityExpression;
 class Expression;
 class OrExpression;
@@ -21,6 +24,9 @@ class Visitor
 public:
     virtual void visit(AdditiveExpression*      expr) = 0;
     virtual void visit(AndExpression*           expr) = 0;
+    virtual void visit(BlockItem*               item) = 0;
+    virtual void visit(CondExpression*          expr) = 0;
+    virtual void visit(Declaration*             decl) = 0;
     virtual void visit(EqualityExpression*      expr) = 0;
     virtual void visit(Expression*              expr) = 0;
     virtual void visit(OrExpression*            expr) = 0;

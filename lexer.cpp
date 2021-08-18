@@ -6,8 +6,10 @@ using namespace std;
 
 
 unordered_map<string, TokenType> keywords {
-    { "return",  TokenType::RETURN  },
-    { "int",     TokenType::INT     },
+    { "return",     TokenType::RETURN   },
+    { "int",        TokenType::INT      },
+    { "if",         TokenType::IF       },
+    { "else",       TokenType::ELSE     },
 };
 
 
@@ -92,6 +94,14 @@ std::vector<Token> Lexer::lex()
         case '~':
             consume();
             tokens.push_back(Token(TokenType::COMPLEMENT, "~"));
+            break;
+        case '?':
+            consume();
+            tokens.push_back(Token(TokenType::QUESTION_MARK, "?"));
+            break;
+        case ':':
+            consume();
+            tokens.push_back(Token(TokenType::COLON, ":"));
             break;
         case '!':
             consume();

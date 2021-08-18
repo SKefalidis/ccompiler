@@ -9,6 +9,9 @@
 #include "goal.h"
 #include "additiveexpression.h"
 #include "andexpression.h"
+#include "blockitem.h"
+#include "condexpression.h"
+#include "declaration.h"
 #include "equalityexpression.h"
 #include "expression.h"
 #include "orexpression.h"
@@ -38,6 +41,9 @@ private:
 
     AdditiveExpression*     add_expr();
     AndExpression*          and_expr();
+    BlockItem*              block_item();
+    CondExpression*         cond_expr();
+    Declaration*            decl();
     EqualityExpression*     eq_expr();
     Expression*             expr();
     OrExpression*           or_expr();

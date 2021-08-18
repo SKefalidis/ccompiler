@@ -4,18 +4,17 @@
 #include <string>
 #include <vector>
 #include "node.h"
-#include "statement.h"
 
 
 class Function : public Node
 {
 public:
     Function(std::string name);
-    Function(std::string name, std::vector<Statement*> stm);
+    Function(std::string name, std::vector<BlockItem*> items);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    std::vector<Statement*> stm {};
+    std::vector<BlockItem*> items {};
     std::string name { "" };
 };
 

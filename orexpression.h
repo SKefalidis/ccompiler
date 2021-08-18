@@ -14,9 +14,9 @@ public:
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    AndExpression* expr;
+    AndExpression* expr { nullptr };
     Token op;
-    OrExpression* tail;
+    OrExpression* tail  { nullptr };
 };
 
 #endif // OREXPRESSION_H
