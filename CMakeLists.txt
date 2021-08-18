@@ -14,7 +14,6 @@ add_executable(ccompiler
     function.h function.cpp
     statement.h statement.cpp
     additiveexpression.h additiveexpression.cpp
-    return.h return.cpp
     literal.h literal.cpp
     visitor.h visitor.cpp
     generatorvisitor.h generatorvisitor.cpp
