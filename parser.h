@@ -51,7 +51,7 @@ private:
     std::vector<Token> tokens;
     int current_token           { 0 };
 
-    std::stack<void*> nodes     {};
+    std::stack<Node*> nodes     {};
 };
 
 #endif // PARSER_H

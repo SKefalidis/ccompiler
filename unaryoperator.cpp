@@ -9,3 +9,8 @@ void UnaryOperator::accept(Visitor* v)
 {
     v->visit(this);
 }
+
+void UnaryOperator::print_node(int tabs) const
+{
+
+}
