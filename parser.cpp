@@ -158,7 +158,6 @@ OrExpression* Parser::or_expr()
             b = new BinaryOrExprOp(op, b, next_expr);
             t = peek();
         }
-
         e = new OrExpression(b);
         nodes.push(e);
     }
@@ -258,7 +257,6 @@ Statement* Parser::stm()
             e = expr();
             nodes.pop();
         }
-
         s = new Statement(e, id);
     } else if (expr()) {
         Expression* e = static_cast<Expression*>(get_and_pop());
