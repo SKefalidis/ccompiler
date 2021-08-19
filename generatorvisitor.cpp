@@ -175,6 +175,7 @@ void GeneratorVisitor::visit(Factor* fact)
 
 void GeneratorVisitor::visit(Function* func)
 {
+    variable_map.push_front(std::unordered_map<std::string, int>());
     stack_index = -4;
     output << func->name << ":" << std::endl;
 
@@ -185,14 +186,11 @@ void GeneratorVisitor::visit(Function* func)
         x->accept(this);
     }
 
-    // if the last instruction isn't a return statement, return 0, FIXME: How to do this correctly?
-//    if (func->items.empty() || !func->items.back()->stm || !func->items.back()->stm->ret) {
-//        output << "\tmovl \t$0, %eax" << std::endl;
-//    }
-
+    output << "\tmovl \t$0, %eax" << std::endl;
     output << "\tmovl \t%ebp, %esp" << std::endl;
     output << "\tpop \t%ebp" << std::endl;
     output << "\tret" << std::endl;
+    variable_map.pop_front();
 }
 
 void GeneratorVisitor::visit(Goal* goal)
@@ -239,11 +237,17 @@ void GeneratorVisitor::visit(RelationalExpression* expr)
 void GeneratorVisitor::visit(Statement* stm)
 {
     if (stm->block_items.size() > 0) { /* new block */
+        variable_map.push_front(std::unordered_map<std::string, int>());
         for (auto& i : stm->block_items) {
             i->accept(this);
         }
+        stack_index += variable_map.front().size() * 4;
+        variable_map.pop_front();
     } else if (stm->ret) { /* return statement */
         stm->expr->accept(this);
+        output << "\tmovl \t%ebp, %esp" << std::endl;
+        output << "\tpop \t%ebp" << std::endl;
+        output << "\tret" << std::endl;
     } else if (stm->expr && stm->if_stm) { /* if statement */
         std::string label = get_label();
         std::string end_label = get_label();
