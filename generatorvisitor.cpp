@@ -88,16 +88,16 @@ void GeneratorVisitor::visit(CondExpression* expr)
 
 void GeneratorVisitor::visit(Declaration* decl)
 {
-    if (variable_map.find(decl->id) != variable_map.end()) {
+    if (variable_map.front().find(decl->id) != variable_map.front().end()) {
         std::cerr << "Double declaration" << std::endl;
         exit(1);
     }
-    variable_map.insert({decl->id, stack_index});
+    variable_map.front().insert({decl->id, stack_index});
     stack_index -= 4;
     if (decl->expr) {
         decl->expr->accept(this);
         output << "\tpushl \t%eax" << std::endl;
-        output << "\tmovl \t%eax, " << variable_map.at(decl->id) << "(%ebp)" << std::endl;
+        output << "\tmovl \t%eax, " << get_variable(decl->id) << "(%ebp)" << std::endl;
     }
 }
 
@@ -131,7 +131,7 @@ void GeneratorVisitor::visit(Expression* expr)
         expr->cond_expr->accept(this);
     } else {
         expr->expr->accept(this);
-        output << "\tmovl \t%eax, " << variable_map.at(expr->id) << "(%ebp)" << std::endl;
+        output << "\tmovl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
     }
 }
 
@@ -166,7 +166,7 @@ void GeneratorVisitor::visit(Factor* fact)
     } else if (fact->expr) {
         fact->expr->accept(this);
     } else if (!fact->variable.empty()) {
-        output << "\tmovl \t" << variable_map.at(fact->variable) << "(%ebp), %eax" << std::endl;
+        output << "\tmovl \t" << get_variable(fact->variable) << "(%ebp), %eax" << std::endl;
     } else {
         fact->inner_factor->accept(this);
         fact->unary_op->accept(this);
@@ -238,7 +238,11 @@ void GeneratorVisitor::visit(RelationalExpression* expr)
 
 void GeneratorVisitor::visit(Statement* stm)
 {
-    if (stm->ret) { /* return statement */
+    if (stm->block_items.size() > 0) { /* new block */
+        for (auto& i : stm->block_items) {
+            i->accept(this);
+        }
+    } else if (stm->ret) { /* return statement */
         stm->expr->accept(this);
     } else if (stm->expr && stm->if_stm) { /* if statement */
         std::string label = get_label();
@@ -303,4 +307,24 @@ void GeneratorVisitor::visit(UnaryOperator* op)
 std::string GeneratorVisitor::get_label()
 {
     return "_label" + std::to_string(label_counter++);
+}
+
+int GeneratorVisitor::get_variable(std::string var_name)
+{
+    int result { 0 };
+    bool found { false };
+    for (auto& level : variable_map) {
+        if (level.find(var_name) != variable_map.front().end()) {
+            result = level.at(var_name);
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        std::cerr << "Variable doesn't exist" << std::endl;
+        throw "Error";
+    }
+
+    return result;
 }

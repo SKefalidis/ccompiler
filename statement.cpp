@@ -13,6 +13,12 @@ Statement::Statement(Expression* expr, Statement* if_stm, Statement* else_stm)
     ;
 }
 
+Statement::Statement(std::vector<BlockItem*> block_items)
+    : block_items(block_items)
+{
+    ;
+}
+
 void Statement::accept(Visitor* v)
 {
     v->visit(this);

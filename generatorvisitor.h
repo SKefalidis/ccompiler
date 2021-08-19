@@ -2,6 +2,7 @@
 #define GENERATORVISITOR_H
 
 #include <fstream>
+#include <deque>
 #include <stack>
 #include <string>
 #include <unordered_map>
@@ -32,12 +33,13 @@ public:
 
 private:
     std::string get_label();
+    int get_variable(std::string var_name);
 
     std::ofstream& output;
     std::stack<std::string> results;
     int label_counter { 0 };
 
-    std::unordered_map<std::string, int> variable_map {};
+    std::deque<std::unordered_map<std::string, int>> variable_map {};
     int stack_index;
 };
 

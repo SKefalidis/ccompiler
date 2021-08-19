@@ -298,6 +298,19 @@ Statement* Parser::stm()
         nodes.pop();
         s = new Statement(e, true);
         consume_and_check(TokenType::SEMICOLON);
+    } else if (peek().type == TokenType::LBRACE) {
+        consume();
+        std::vector<BlockItem*> block_items;
+        while (peek().type != TokenType::RBRACE) {
+            if (block_item()) {
+                BlockItem* b = static_cast<BlockItem*>(get_and_pop()); /* TODO: use `auto` */
+                block_items.push_back(b);
+            } else {
+                return nullptr;
+            }
+        }
+        consume_and_check(TokenType::RBRACE);
+        s = new Statement(block_items);
     } else if (peek().type == TokenType::IF) {
         consume();
         consume_and_check(TokenType::LPAREN);
