@@ -39,6 +39,7 @@ private:
 
     void parse_error(std::string error);
 
+    // TODO: make stack optional!
     AdditiveExpression*     add_expr();
     AndExpression*          and_expr();
     BlockItem*              block_item();
@@ -46,6 +47,7 @@ private:
     Declaration*            decl();
     EqualityExpression*     eq_expr();
     Expression*             expr();
+    Expression*             expr_optional();
     OrExpression*           or_expr();
     Factor*                 fact();
     Function*               func();

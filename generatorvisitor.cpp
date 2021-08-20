@@ -243,11 +243,62 @@ void GeneratorVisitor::visit(Statement* stm)
         }
         stack_index += variable_map.front().size() * 4;
         variable_map.pop_front();
-    } else if (stm->ret) { /* return statement */
+    } else if (stm->stm_type == Type::RETURN) { /* return statement */
         stm->expr->accept(this);
         output << "\tmovl \t%ebp, %esp" << std::endl;
         output << "\tpop \t%ebp" << std::endl;
         output << "\tret" << std::endl;
+    } else if (stm->stm_type == Type::EMPTY) { /* empty statement */
+        ;
+    } else if (stm->stm_type == Type::WHILE) { /* while statement */
+        std::string start_label = get_label();
+        std::string end_label = get_label();
+        output << start_label << ":" << std::endl;
+        stm->e1->accept(this);
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tje " << end_label << std::endl;
+        stm->body->accept(this);
+        output << "\tjmp " << start_label << std::endl;
+        output << end_label << ":" << std::endl;
+    } else if (stm->stm_type == Type::DO) { /* do statement */
+        std::string start_label = get_label();
+        std::string end_label = get_label();
+        output << start_label << ":" << std::endl;
+        stm->body->accept(this);
+        stm->e1->accept(this);
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tje " << end_label << std::endl;
+        output << "\tjmp " << start_label << std::endl;
+        output << end_label << ":" << std::endl;
+    } else if (stm->stm_type == Type::FOR) { /* for statement */
+        std::string start_label = get_label();
+        std::string end_label = get_label();
+
+        output << "# for" << std::endl;
+        output << "# e1" << std::endl;
+        if (stm->d) {
+            variable_map.push_front(std::unordered_map<std::string, int>());
+            stm->d->accept(this);
+        } else {
+            stm->e1->accept(this);
+        }
+
+        output << start_label << ":" << std::endl;
+        output << "# e2" << std::endl;
+        stm->e2->accept(this);
+        output << "\tcmpl \t$0, %eax" << std::endl;
+        output << "\tje " << end_label << std::endl;
+        output << "# body" << std::endl;
+        stm->body->accept(this);
+        output << "# e3" << std::endl;
+        stm->e3->accept(this);
+        output << "\tjmp " << start_label << std::endl;
+        output << end_label << ":" << std::endl;
+
+        if (stm->d) {
+            stack_index += 4;
+            variable_map.pop_front();
+        }
     } else if (stm->expr && stm->if_stm) { /* if statement */
         std::string label = get_label();
         std::string end_label = get_label();

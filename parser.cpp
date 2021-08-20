@@ -195,6 +195,19 @@ Expression* Parser::expr()
     return e;
 }
 
+Expression* Parser::expr_optional()
+{
+    if (peek().type == TokenType::SEMICOLON) {
+        return nullptr;
+    } else {
+        Expression* e = expr();
+        if (!e) {
+            throw "Crash";
+        }
+        return e;
+    }
+}
+
 OrExpression* Parser::or_expr()
 {
     OrExpression* e { nullptr };
@@ -291,13 +304,20 @@ RelationalExpression* Parser::rel_expr()
 Statement* Parser::stm()
 {
     Statement* s { nullptr };
-
     if (peek().type == TokenType::RETURN) {
         consume();
         Expression* e = expr();
         nodes.pop();
         s = new Statement(e, true);
         consume_and_check(TokenType::SEMICOLON);
+    } else if (peek().type == TokenType::BREAK) {
+        consume();
+        consume_and_check(TokenType::SEMICOLON);
+        s = new Statement(Type::BREAK);
+    } else if (peek().type == TokenType::CONTINUE) {
+        consume();
+        consume_and_check(TokenType::SEMICOLON);
+        s = new Statement(Type::CONTINUE);
     } else if (peek().type == TokenType::LBRACE) {
         consume();
         std::vector<BlockItem*> block_items;
@@ -326,12 +346,65 @@ Statement* Parser::stm()
             nodes.pop();
         }
         s = new Statement(e, if_stm, else_stm);
-    } else if (expr()) {
-        Expression* e = static_cast<Expression*>(get_and_pop());
+    } else if (peek().type == TokenType::FOR) {
+        consume();
+        consume_and_check(TokenType::LPAREN);
+        Declaration* d { nullptr };
+        Expression* e1 { nullptr };
+        if (peek().type == TokenType::INT) { // TODO: Will have to change this, to any type or just call decl() and if it fails revert and check again
+            d = decl();
+            nodes.pop();
+        } else {
+            e1 = expr_optional();
+            if (e1) {
+                nodes.pop();
+            }
+            consume_and_check(TokenType::SEMICOLON);
+        }
+        Expression* e2 = expr_optional();
+        if (e2) {
+            nodes.pop();
+        }
+        consume_and_check(TokenType::SEMICOLON);
+        Expression* e3 = expr_optional();
+        if (e3) {
+            nodes.pop();
+        }
+        consume_and_check(TokenType::RPAREN);
+        Statement* body = stm();
+        nodes.pop();
+
+        if (d)
+            s = new Statement(d, e2, e3, body);
+        else
+            s = new Statement(e1, e2, e3, body);
+    } else if (peek().type == TokenType::WHILE) {
+        consume();
+        consume_and_check(TokenType::LPAREN);
+        Expression* e = expr();
+        nodes.pop();
+        consume_and_check(TokenType::RPAREN);
+        Statement* body = stm();
+        nodes.pop();
+        s = new Statement(Type::WHILE, e, body);
+    } else if (peek().type == TokenType::DO) {
+        consume();
+        Statement* body = stm();
+        nodes.pop();
+        consume_and_check(TokenType::WHILE);
+        consume_and_check(TokenType::LPAREN);
+        Expression* e = expr();
+        nodes.pop();
+        consume_and_check(TokenType::RPAREN);
+        consume_and_check(TokenType::SEMICOLON);
+        s = new Statement(Type::DO, e, body);
+    } else {
+        Expression* e = expr_optional();
+        if (e) {
+            nodes.pop();
+        }
         s = new Statement(e, false);
         consume_and_check(TokenType::SEMICOLON);
-    } else {
-        return nullptr;
     }
     nodes.push(s);
 
