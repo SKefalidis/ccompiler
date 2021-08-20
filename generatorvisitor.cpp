@@ -250,9 +250,22 @@ void GeneratorVisitor::visit(Statement* stm)
         output << "\tret" << std::endl;
     } else if (stm->stm_type == Type::EMPTY) { /* empty statement */
         ;
+    } else if (stm->stm_type == Type::BREAK) { /* empty statement */
+        if (break_label.empty()) {
+            throw "Illegal break statement";
+        }
+        output << "\tjmp " << break_label << std::endl;
+    } else if (stm->stm_type == Type::CONTINUE) { /* empty statement */
+        if (continue_label.empty()) {
+            throw "Illegal continue statement";
+        }
+        output << "\tjmp " << continue_label << std::endl;
     } else if (stm->stm_type == Type::WHILE) { /* while statement */
         std::string start_label = get_label();
         std::string end_label = get_label();
+        continue_label = start_label;
+        break_label = end_label;
+
         output << start_label << ":" << std::endl;
         stm->e1->accept(this);
         output << "\tcmpl \t$0, %eax" << std::endl;
@@ -260,9 +273,15 @@ void GeneratorVisitor::visit(Statement* stm)
         stm->body->accept(this);
         output << "\tjmp " << start_label << std::endl;
         output << end_label << ":" << std::endl;
+
+        break_label = "";
+        continue_label = "";
     } else if (stm->stm_type == Type::DO) { /* do statement */
         std::string start_label = get_label();
         std::string end_label = get_label();
+        continue_label = start_label;
+        break_label = end_label;
+
         output << start_label << ":" << std::endl;
         stm->body->accept(this);
         stm->e1->accept(this);
@@ -270,28 +289,39 @@ void GeneratorVisitor::visit(Statement* stm)
         output << "\tje " << end_label << std::endl;
         output << "\tjmp " << start_label << std::endl;
         output << end_label << ":" << std::endl;
+
+        break_label = "";
+        continue_label = "";
     } else if (stm->stm_type == Type::FOR) { /* for statement */
         std::string start_label = get_label();
         std::string end_label = get_label();
+        std::string continue_label = get_label();
+        this->continue_label = continue_label;
+        break_label = end_label;
 
         output << "# for" << std::endl;
         output << "# e1" << std::endl;
         if (stm->d) {
             variable_map.push_front(std::unordered_map<std::string, int>());
             stm->d->accept(this);
-        } else {
+        } else if (stm->e1) {
             stm->e1->accept(this);
         }
 
         output << start_label << ":" << std::endl;
         output << "# e2" << std::endl;
-        stm->e2->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tje " << end_label << std::endl;
+        if (stm->e2) {
+            stm->e2->accept(this);
+            output << "\tcmpl \t$0, %eax" << std::endl;
+            output << "\tje " << end_label << std::endl;
+        }
         output << "# body" << std::endl;
         stm->body->accept(this);
         output << "# e3" << std::endl;
-        stm->e3->accept(this);
+        output << continue_label << ":" << std::endl;
+        if (stm->e3) {
+            stm->e3->accept(this);
+        }
         output << "\tjmp " << start_label << std::endl;
         output << end_label << ":" << std::endl;
 
@@ -299,6 +329,9 @@ void GeneratorVisitor::visit(Statement* stm)
             stack_index += 4;
             variable_map.pop_front();
         }
+
+        break_label = "";
+        continue_label = "";
     } else if (stm->expr && stm->if_stm) { /* if statement */
         std::string label = get_label();
         std::string end_label = get_label();

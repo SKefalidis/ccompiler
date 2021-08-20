@@ -41,6 +41,9 @@ private:
 
     std::deque<std::unordered_map<std::string, int>> variable_map {};
     int stack_index;
+
+    std::string break_label     { "" };
+    std::string continue_label  { "" };
 };
 
 #endif // GENERATORVISITOR_H

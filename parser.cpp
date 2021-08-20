@@ -197,7 +197,7 @@ Expression* Parser::expr()
 
 Expression* Parser::expr_optional()
 {
-    if (peek().type == TokenType::SEMICOLON) {
+    if (peek().type == TokenType::SEMICOLON || peek().type == TokenType::RPAREN) {
         return nullptr;
     } else {
         Expression* e = expr();
