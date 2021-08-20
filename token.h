@@ -33,6 +33,11 @@ enum class TokenType {
     INT,
     IF,
     ELSE,
+    FOR,
+    WHILE,
+    DO,
+    BREAK,
+    CONTINUE,
 
     IDENTIFIER,
     INTEGER_LITERAL,

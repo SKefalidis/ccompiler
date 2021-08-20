@@ -10,6 +10,11 @@ unordered_map<string, TokenType> keywords {
     { "int",        TokenType::INT      },
     { "if",         TokenType::IF       },
     { "else",       TokenType::ELSE     },
+    { "for",        TokenType::FOR      },
+    { "while",      TokenType::WHILE    },
+    { "do",         TokenType::DO       },
+    { "break",      TokenType::BREAK    },
+    { "continue",   TokenType::CONTINUE },
 };
 
 
