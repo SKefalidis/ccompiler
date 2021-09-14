@@ -26,6 +26,11 @@ std::unordered_map<TokenType, std::string> tokenTypeStrings {
     { TokenType::GT,                "GT",               },
     { TokenType::GE,                "GE",               },
     { TokenType::ASSIGN,            "ASSIGN",           },
+    { TokenType::PLUS_ASSIGN,       "PLUS_ASSIGN",      },
+    { TokenType::MINUS_ASSIGN,      "MINUS_ASSIGN",     },
+    { TokenType::DIV_ASSIGN,        "DIV_ASSIGN",       },
+    { TokenType::MULT_ASSIGN,       "MULT_ASSIGN",      },
+    { TokenType::MOD_ASSIGN,        "MOD_ASSIGN",       },
 
     { TokenType::RETURN,            "RETURN",           },
     { TokenType::INT,               "INT",              },

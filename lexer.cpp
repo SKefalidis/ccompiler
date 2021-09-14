@@ -85,6 +85,9 @@ std::vector<Token> Lexer::lex()
             if (file.peek() == '-') {
                 consume();
                 tokens.push_back(Token(TokenType::DECREMENT, "--"));
+            } else if (file.peek() == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::MINUS_ASSIGN, "-="));
             } else {
                 tokens.push_back(Token(TokenType::MINUS, "-"));
             }
@@ -94,21 +97,39 @@ std::vector<Token> Lexer::lex()
             if (file.peek() == '+') {
                 consume();
                 tokens.push_back(Token(TokenType::INCREMENT, "++"));
+            } else if (file.peek() == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::PLUS_ASSIGN, "+="));
             } else {
                 tokens.push_back(Token(TokenType::PLUS, "+"));
             }
             break;
         case '*':
             consume();
-            tokens.push_back(Token(TokenType::STAR, "*"));
+            if (file.peek() == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::MULT_ASSIGN, "*="));
+            } else {
+                tokens.push_back(Token(TokenType::STAR, "*"));
+            }
             break;
         case '%':
             consume();
-            tokens.push_back(Token(TokenType::MODULO, "%"));
+            if (file.peek() == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::MOD_ASSIGN, "%="));
+            } else {
+                tokens.push_back(Token(TokenType::MODULO, "%"));
+            }
             break;
         case '/':
             consume();
-            tokens.push_back(Token(TokenType::SLASH, "/"));
+            if (file.peek() == '=') {
+                consume();
+                tokens.push_back(Token(TokenType::DIV_ASSIGN, "*="));
+            } else {
+                tokens.push_back(Token(TokenType::SLASH, "/"));
+            }
             break;
         case '~':
             consume();

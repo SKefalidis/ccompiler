@@ -9,8 +9,8 @@ Expression::Expression(CondExpression* cond_expr)
     ;
 }
 
-Expression::Expression(std::string id, Expression* expr)
-    : id(id), expr(expr)
+Expression::Expression(std::string id, Expression* expr, Token op)
+    : id(id), expr(expr), op(op)
 {
     ;
 }

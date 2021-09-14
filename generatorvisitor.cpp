@@ -129,9 +129,46 @@ void GeneratorVisitor::visit(Expression* expr)
 {
     if (expr->cond_expr) {
         expr->cond_expr->accept(this);
-    } else {
+    } else { /* assignment operation */
         expr->expr->accept(this);
-        output << "\tmovl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+        switch (expr->op.type) {
+        case TokenType::PLUS:
+            output << "\taddl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+        case TokenType::MINUS:
+            output << "\tsubl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+        case TokenType::STAR:
+            output << "\timul \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            break;
+        case TokenType::SLASH:
+            /* %ecx holds the divisor */
+            output << "\tmovl \t%eax, %ecx" << std::endl;
+            /* %EDX:%EAX hold the previous value of the variable */
+            output << "\tmovl \t " << get_variable(expr->id) << "(%ebp), %eax" << std::endl;
+            output << "\tcdq" << std::endl;
+            /* execute the division */
+            output << "\tidivl \t%ecx" << std::endl;
+            /* move the quotient to the memory location of the variable */
+            output << "\tmovl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            break;
+        case TokenType::MODULO:
+            /* %ecx holds the divisor */
+            output << "\tmovl \t%eax, %ecx" << std::endl;
+            /* %EDX:%EAX hold the previous value of the variable */
+            output << "\tmovl \t " << get_variable(expr->id) << "(%ebp), %eax" << std::endl;
+            output << "\tcdq" << std::endl;
+            /* execute the division */
+            output << "\tidivl \t%ecx" << std::endl;
+            /* move the remainder to the memory location of the variable */
+            output << "\tmovl \t%edx, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            break;
+        case TokenType::ASSIGN:
+            output << "\tmovl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            break;
+        default:
+            ;
+        }
+        /* make sure that %eax has the correct value in case it is used */
+        output << "\tmovl \t " << get_variable(expr->id) << "(%ebp), %eax" << std::endl;
     }
 }
 

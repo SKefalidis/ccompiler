@@ -31,6 +31,11 @@ enum class TokenType {
     GT,
     GE,
     ASSIGN,
+    PLUS_ASSIGN,
+    MINUS_ASSIGN,
+    DIV_ASSIGN,
+    MULT_ASSIGN,
+    MOD_ASSIGN,
 
     RETURN,
     INT,

@@ -179,12 +179,41 @@ Expression* Parser::expr()
 {
     Expression* e { nullptr };
 
-    if (peek().type == TokenType::IDENTIFIER && peek(1).type == TokenType::ASSIGN) {
+    if (peek().type == TokenType::IDENTIFIER &&
+            (peek(1).type == TokenType::ASSIGN
+            || peek(1).type == TokenType::PLUS_ASSIGN
+            || peek(1).type == TokenType::MINUS_ASSIGN
+            || peek(1).type == TokenType::MULT_ASSIGN
+            || peek(1).type == TokenType::DIV_ASSIGN
+            || peek(1).type == TokenType::MOD_ASSIGN)) {
+        Token t;
+
+        /* get the operator if the operation is not a simple assignment */
+        switch (peek(1).type) {
+        case TokenType::PLUS_ASSIGN:
+            t = Token(TokenType::PLUS, tokenTypeStrings.at(TokenType::PLUS));
+            break;
+        case TokenType::MINUS_ASSIGN:
+            t = Token(TokenType::MINUS, tokenTypeStrings.at(TokenType::MINUS));
+            break;
+        case TokenType::MULT_ASSIGN:
+            t = Token(TokenType::STAR, tokenTypeStrings.at(TokenType::STAR));
+            break;
+        case TokenType::DIV_ASSIGN:
+            t = Token(TokenType::SLASH, tokenTypeStrings.at(TokenType::SLASH));
+            break;
+        case TokenType::MOD_ASSIGN:
+            t = Token(TokenType::MODULO, tokenTypeStrings.at(TokenType::MODULO));
+            break;
+        default:
+            ;
+        }
+
         std::string id = consume().value;
-        consume_and_check(TokenType::ASSIGN);
+        consume(); /* consume (x)-assign operator */
         Expression* r_expr = expr();
         nodes.pop();
-        e = new Expression(id, r_expr);
+        e = new Expression(id, r_expr, t);
         nodes.push(e);
     } else if (cond_expr()) {
         CondExpression* expr = static_cast<CondExpression*>(get_and_pop());
