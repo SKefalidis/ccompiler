@@ -82,11 +82,21 @@ std::vector<Token> Lexer::lex()
             break;
         case '-':
             consume();
-            tokens.push_back(Token(TokenType::MINUS, "-"));
+            if (file.peek() == '-') {
+                consume();
+                tokens.push_back(Token(TokenType::DECREMENT, "--"));
+            } else {
+                tokens.push_back(Token(TokenType::MINUS, "-"));
+            }
             break;
         case '+':
             consume();
-            tokens.push_back(Token(TokenType::PLUS, "+"));
+            if (file.peek() == '+') {
+                consume();
+                tokens.push_back(Token(TokenType::INCREMENT, "++"));
+            } else {
+                tokens.push_back(Token(TokenType::PLUS, "+"));
+            }
             break;
         case '*':
             consume();

@@ -440,6 +440,17 @@ UnaryOperator* Parser::unary_op()
         Token t = consume();
         op = new UnaryOperator(t);
         nodes.push(op);
+    } else if (type == TokenType::INCREMENT || type == TokenType::DECREMENT) {
+        Token t = consume();
+        std::string id { "" };
+        for (int i = 0; true; i++) {
+            if (peek(i).type == TokenType::IDENTIFIER) {
+                id = peek(i).value;
+                break;
+            }
+        }
+        op = new UnaryOperator(t, id);
+        nodes.push(op);
     } else {
         parse_error("Unary Operator");
         return nullptr;

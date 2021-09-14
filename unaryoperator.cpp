@@ -1,6 +1,13 @@
 #include "unaryoperator.h"
 
-UnaryOperator::UnaryOperator(Token t) : op(t)
+UnaryOperator::UnaryOperator(Token t)
+    : op(t)
+{
+    ;
+}
+
+UnaryOperator::UnaryOperator(Token t, std::string id)
+    : op(t), id(id)
 {
     ;
 }

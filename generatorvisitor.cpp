@@ -393,6 +393,14 @@ void GeneratorVisitor::visit(UnaryOperator* op)
         output << "\tmovl \t$0, %eax" << std::endl;
         output << "\tsete \t%al" << std::endl;
         break;
+    case (TokenType::INCREMENT):
+        output << "\taddl \t$1, %eax" << std::endl;
+        output << "\tmovl \t%eax, " << get_variable(op->id) << "(%ebp)" << std::endl;
+        break;
+    case (TokenType::DECREMENT):
+        output << "\tsubl \t$1, %eax" << std::endl;
+        output << "\tmovl \t%eax, " << get_variable(op->id) << "(%ebp)" << std::endl;
+        break;
     default:
         std::cerr << "Unexpected TokenType" << std::endl;
     }
