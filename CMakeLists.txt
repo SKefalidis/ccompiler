@@ -6,27 +6,27 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(ccompiler
-    main.cpp
-    lexer.h lexer.cpp
-    token.h token.cpp
-    parser.h parser.cpp
-    goal.h goal.cpp
-    function.h function.cpp
-    statement.h statement.cpp
-    additiveexpression.h additiveexpression.cpp
-    literal.h literal.cpp
-    visitor.h visitor.cpp
-    generatorvisitor.h generatorvisitor.cpp
-    unaryoperator.h unaryoperator.cpp
-    term.h term.cpp
-    factor.h factor.cpp
-    node.h node.cpp
-    relationalexpression.h relationalexpression.cpp
-    equalityexpression.h equalityexpression.cpp
-    andexpression.h andexpression.cpp
-    orexpression.h orexpression.cpp
-    expression.h expression.cpp
-    blockitem.h blockitem.cpp
-    declaration.h declaration.cpp
-    condexpression.h condexpression.cpp
+    src/main.cpp
+    src/lexer.h src/lexer.cpp
+    src/token.h src/token.cpp
+    src/parser.h src/parser.cpp
+    src/goal.h src/goal.cpp
+    src/function.h src/function.cpp
+    src/statement.h src/statement.cpp
+    src/additiveexpression.h src/additiveexpression.cpp
+    src/literal.h src/literal.cpp
+    src/visitor.h src/visitor.cpp
+    src/generatorvisitor.h src/generatorvisitor.cpp
+    src/unaryoperator.h src/unaryoperator.cpp
+    src/term.h src/term.cpp
+    src/factor.h src/factor.cpp
+    src/node.h src/node.cpp
+    src/relationalexpression.h src/relationalexpression.cpp
+    src/equalityexpression.h src/equalityexpression.cpp
+    src/andexpression.h src/andexpression.cpp
+    src/orexpression.h src/orexpression.cpp
+    src/expression.h src/expression.cpp
+    src/blockitem.h src/blockitem.cpp
+    src/declaration.h src/declaration.cpp
+    src/condexpression.h src/condexpression.cpp
     )
