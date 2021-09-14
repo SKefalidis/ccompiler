@@ -92,6 +92,10 @@ std::vector<Token> Lexer::lex()
             consume();
             tokens.push_back(Token(TokenType::STAR, "*"));
             break;
+        case '%':
+            consume();
+            tokens.push_back(Token(TokenType::MODULO, "%"));
+            break;
         case '/':
             consume();
             tokens.push_back(Token(TokenType::SLASH, "/"));

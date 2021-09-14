@@ -418,7 +418,7 @@ Term* Parser::term()
     if (fact()) {
         term = new Term(static_cast<Factor*>(get_and_pop()));
         Token t = peek();
-        while (t.type == TokenType::STAR || t.type == TokenType::SLASH) {
+        while (t.type == TokenType::STAR || t.type == TokenType::SLASH || t.type == TokenType::MODULO) {
             Token op = consume();
             Factor* next_fact = fact();
             nodes.pop();

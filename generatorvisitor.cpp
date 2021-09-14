@@ -369,6 +369,12 @@ void GeneratorVisitor::visit(Term* term)
             output << "\tpop \t%eax" << std::endl;
             output << "\tcdq" << std::endl;
             output << "\tidivl \t%ecx" << std::endl;
+        } else if (term->op.type == TokenType::MODULO) {
+            output << "\tmovl \t%eax, %ecx" << std::endl;
+            output << "\tpop \t%eax" << std::endl;
+            output << "\tcdq" << std::endl;
+            output << "\tidivl \t%ecx" << std::endl;
+            output << "\tmovl \t%edx, %eax" << std::endl;
         }
     }
 }
