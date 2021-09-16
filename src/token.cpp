@@ -17,6 +17,7 @@ std::unordered_map<TokenType, std::string> tokenTypeStrings {
     { TokenType::SLASH,             "SLASH",            },
     { TokenType::COLON,             "COLON",            },
     { TokenType::QUESTION_MARK,     "QUESTION_MARK",    },
+    { TokenType::COMMA,             "COMMA",            },
     { TokenType::AND,               "AND",              },
     { TokenType::OR,                "OR",               },
     { TokenType::EQ,                "EQ",               },

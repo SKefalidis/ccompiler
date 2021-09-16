@@ -143,6 +143,10 @@ std::vector<Token> Lexer::lex()
             consume();
             tokens.push_back(Token(TokenType::COLON, ":"));
             break;
+        case ',':
+            consume();
+            tokens.push_back(Token(TokenType::COMMA, ","));
+            break;
         case '!':
             consume();
             c = file.peek();

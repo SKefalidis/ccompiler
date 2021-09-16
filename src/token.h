@@ -22,6 +22,7 @@ enum class TokenType {
     SLASH,
     COLON,
     QUESTION_MARK,
+    COMMA,
     AND,
     OR,
     EQ,
