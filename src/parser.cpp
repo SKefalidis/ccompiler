@@ -206,7 +206,7 @@ Expression* Parser::expr()
             t = Token(TokenType::MODULO, tokenTypeStrings.at(TokenType::MODULO));
             break;
         default:
-            ;
+            t = Token(TokenType::INVALID, tokenTypeStrings.at(TokenType::INVALID));
         }
 
         std::string id = consume().value;

@@ -161,7 +161,7 @@ void GeneratorVisitor::visit(Expression* expr)
             /* move the remainder to the memory location of the variable */
             output << "\tmovl \t%edx, " << get_variable(expr->id) << "(%ebp)" << std::endl;
             break;
-        case TokenType::ASSIGN:
+        case TokenType::INVALID:
             output << "\tmovl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
             break;
         default:
