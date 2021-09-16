@@ -8,6 +8,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "generatorvisitor.h"
+#include "functiondeclarationvisitor.h"
 #include "node.h"
 
 using namespace std;
@@ -38,6 +39,8 @@ int main(int argc, char** argv)
     Parser parser(tokens);
     auto g = parser.parse();
 //    print_ast(g);
+    FunctionDeclarationVisitor fvisitor;
+    fvisitor.visit(g);
     generate(g);
 
     pid_t pid = fork();

@@ -204,6 +204,8 @@ void GeneratorVisitor::visit(Factor* fact)
         fact->expr->accept(this);
     } else if (!fact->variable.empty()) {
         output << "\tmovl \t" << get_variable(fact->variable) << "(%ebp), %eax" << std::endl;
+    } else if (fact->func) {
+        fact->func->accept(this);
     } else {
         fact->inner_factor->accept(this);
         fact->unary_op->accept(this);

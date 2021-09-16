@@ -17,6 +17,7 @@ public:
     std::vector<BlockItem*> items {};
     std::vector<std::pair<std::string, std::string>> parameters {};
     std::string name { "" };
+    bool definition;
 };
 
 #endif // FUNCTION_H

@@ -6,13 +6,13 @@
 FunctionDeclaration::FunctionDeclaration(std::string name, std::vector<std::pair<std::string, std::string>> parameters)
     : name(name), parameters(parameters)
 {
-    ;
+    definition = false;
 }
 
 FunctionDeclaration::FunctionDeclaration(std::string name, std::vector<std::pair<std::string, std::string>> parameters, std::vector<BlockItem*> items)
     : name(name), parameters(parameters), items(items)
 {
-    ;
+    definition = true;
 }
 
 void FunctionDeclaration::accept(Visitor* v)

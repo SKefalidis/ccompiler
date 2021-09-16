@@ -11,12 +11,14 @@ add_executable(ccompiler
     src/token.h src/token.cpp
     src/parser.h src/parser.cpp
     src/goal.h src/goal.cpp
-    src/function.h src/function.cpp
+    src/functiondeclaration.h src/functiondeclaration.cpp
+    src/functioncall.h src/functioncall.cpp
     src/statement.h src/statement.cpp
     src/additiveexpression.h src/additiveexpression.cpp
     src/literal.h src/literal.cpp
     src/visitor.h src/visitor.cpp
     src/generatorvisitor.h src/generatorvisitor.cpp
+    src/functiondeclarationvisitor.h src/functiondeclarationvisitor.cpp
     src/unaryoperator.h src/unaryoperator.cpp
     src/term.h src/term.cpp
     src/factor.h src/factor.cpp

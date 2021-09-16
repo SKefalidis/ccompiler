@@ -311,19 +311,25 @@ FunctionDeclaration* Parser::func_decl()
         }
     }
     consume_and_check(TokenType::RPAREN);
-    consume_and_check(TokenType::LBRACE);
-    std::vector<BlockItem*> items {};
-    while (peek().type != TokenType::RBRACE) {
-        if (block_item()) {
-            BlockItem* b = static_cast<BlockItem*>(get_and_pop()); /* TODO: use `auto` */
-            items.push_back(b);
-        } else {
-            return nullptr;
+    if (peek().type == TokenType::SEMICOLON) {
+        consume();
+        f = new FunctionDeclaration(name, parameters);
+    } else {
+        /* also a definition */
+        consume_and_check(TokenType::LBRACE);
+        std::vector<BlockItem*> items {};
+        while (peek().type != TokenType::RBRACE) {
+            if (block_item()) {
+                BlockItem* b = static_cast<BlockItem*>(get_and_pop()); /* TODO: use `auto` */
+                items.push_back(b);
+            } else {
+                return nullptr;
+            }
         }
+        f = new FunctionDeclaration(name, parameters, items);
+        consume_and_check(TokenType::RBRACE);
     }
-    f = new FunctionDeclaration(name, parameters, items);
     nodes.push(f);
-    consume_and_check(TokenType::RBRACE);
 
     return f;
 }
