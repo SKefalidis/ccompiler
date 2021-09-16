@@ -23,7 +23,8 @@ public:
     void visit(Expression*              expr)  override;
     void visit(OrExpression*            expr)  override;
     void visit(Factor*                  fact)  override;
-    void visit(Function*                func)  override;
+    void visit(FunctionDeclaration*     func)  override;
+    void visit(FunctionCall*            func)  override;
     void visit(Goal*                    goal)  override;
     void visit(Literal*                 lit)   override;
     void visit(RelationalExpression*    expr)  override;

@@ -4,7 +4,7 @@
 #include "blockitem.h"
 #include "condexpression.h"
 #include "declaration.h"
-#include "function.h"
+#include "functiondeclaration.h"
 #include "goal.h"
 #include "andexpression.h"
 #include "equalityexpression.h"
@@ -210,7 +210,7 @@ void GeneratorVisitor::visit(Factor* fact)
     }
 }
 
-void GeneratorVisitor::visit(Function* func)
+void GeneratorVisitor::visit(FunctionDeclaration* func)
 {
     variable_map.push_front(std::unordered_map<std::string, int>());
     stack_index = -4;
@@ -230,10 +230,15 @@ void GeneratorVisitor::visit(Function* func)
     variable_map.pop_front();
 }
 
+void GeneratorVisitor::visit(FunctionCall* func)
+{
+
+}
+
 void GeneratorVisitor::visit(Goal* goal)
 {
-    output << " .globl " << goal->func->name << std::endl;
-    goal->func->accept(this);
+    output << " .globl " << goal->func.at(0)->name << std::endl;
+    goal->func.at(0)->accept(this);
 }
 
 void GeneratorVisitor::visit(Literal* lit)

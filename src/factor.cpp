@@ -27,6 +27,12 @@ Factor::Factor(std::string variable)
     ;
 }
 
+Factor::Factor(FunctionCall* func)
+    : func(func)
+{
+    ;
+}
+
 void Factor::accept(Visitor* v)
 {
     v->visit(this);

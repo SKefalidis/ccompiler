@@ -53,10 +53,14 @@ Goal* Parser::parse()
     Goal* g { nullptr };
 
     current_token = 0;
-    if (func() && peek().type == TokenType::END_OF_FILE) {
-        Function* f = static_cast<Function*>(get_and_pop());
-        g = new Goal(f);
+    std::vector<FunctionDeclaration*> decls {};
+    while (peek().type != TokenType::END_OF_FILE) {
+        FunctionDeclaration* f = func_decl();
+        nodes.pop();
+        decls.push_back(f);
     }
+    g = new Goal(decls);
+    consume_and_check(TokenType::END_OF_FILE);
 
     return g;
 }
@@ -265,8 +269,14 @@ Factor* Parser::fact()
         Token t = consume();
         f = new Factor(new IntLiteral(t.value));
     } else if (peek().type == TokenType::IDENTIFIER) {
-        std::string variable = consume().value;
-        f = new Factor(variable);
+        if (peek(1).type == TokenType::LPAREN) {
+            FunctionCall* func = func_call();
+            nodes.pop();
+            f = new Factor(func);
+        } else {
+            std::string variable = consume().value;
+            f = new Factor(variable);
+        }
     } else if (peek().type == TokenType::LPAREN) {
         consume();
         Expression* e = expr();
@@ -285,13 +295,21 @@ Factor* Parser::fact()
     return f;
 }
 
-Function* Parser::func()
+FunctionDeclaration* Parser::func_decl()
 {
-    Function* f  { nullptr };
+    FunctionDeclaration* f  { nullptr };
 
     consume_and_check(TokenType::INT);
     std::string name = consume_and_check(TokenType::IDENTIFIER).value;
     consume_and_check(TokenType::LPAREN);
+    std::vector<std::pair<std::string, std::string>> parameters {};
+    while (peek().type != TokenType::RPAREN) {
+        consume_and_check(TokenType::INT);
+        if (peek().type == TokenType::IDENTIFIER) {
+            parameters.push_back(std::pair<std::string, std::string>("INT", peek().value));
+            consume();
+        }
+    }
     consume_and_check(TokenType::RPAREN);
     consume_and_check(TokenType::LBRACE);
     std::vector<BlockItem*> items {};
@@ -303,9 +321,31 @@ Function* Parser::func()
             return nullptr;
         }
     }
-    f = new Function(name, items);
+    f = new FunctionDeclaration(name, parameters, items);
     nodes.push(f);
     consume_and_check(TokenType::RBRACE);
+
+    return f;
+}
+
+FunctionCall* Parser::func_call()
+{
+    FunctionCall* f { nullptr };
+
+    std::string id = consume_and_check(TokenType::IDENTIFIER).value;
+    consume_and_check(TokenType::LPAREN);
+    std::vector<Expression*> expressions {};
+    while (peek().type != TokenType::RPAREN) {
+        if (expr()) {
+            Expression* e = static_cast<Expression*>(get_and_pop());
+            expressions.push_back(e);
+        } else {
+            parse_error("Expected argument");
+        }
+    }
+    consume_and_check(TokenType::RPAREN);
+    f = new FunctionCall(id, expressions);
+    nodes.push(f);
 
     return f;
 }

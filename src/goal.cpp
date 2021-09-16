@@ -1,9 +1,10 @@
 #include <iostream>
 #include "goal.h"
 
-Goal::Goal(Function* f)
+Goal::Goal(std::vector<FunctionDeclaration*> f)
+    : func(f)
 {
-    func = f;
+    ;
 }
 
 void Goal::accept(Visitor* v)
@@ -14,5 +15,5 @@ void Goal::accept(Visitor* v)
 void Goal::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "GOAL" << std::endl;
-    func->print_node(tabs + 1);
+//    func->print_node(tabs + 1);
 }

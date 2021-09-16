@@ -16,7 +16,8 @@
 #include "expression.h"
 #include "orexpression.h"
 #include "factor.h"
-#include "function.h"
+#include "functiondeclaration.h"
+#include "functioncall.h"
 #include "literal.h"
 #include "relationalexpression.h"
 #include "statement.h"
@@ -50,7 +51,8 @@ private:
     Expression*             expr_optional();
     OrExpression*           or_expr();
     Factor*                 fact();
-    Function*               func();
+    FunctionDeclaration*    func_decl();
+    FunctionCall*           func_call();
     RelationalExpression*   rel_expr();
     Statement*              stm();
     Term*                   term();
