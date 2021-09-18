@@ -34,7 +34,11 @@ public:
 
 private:
     std::string get_label();
-    int get_variable(std::string var_name);
+    std::string get_variable(std::string var_name);
+    void print_line(std::string line);
+    void print_instr(std::string instruction);
+    void print_instr(std::string instruction, std::string arg1);
+    void print_instr(std::string instruction, std::string arg1, std::string arg2);
 
     std::ofstream& output;
     std::stack<std::string> results;

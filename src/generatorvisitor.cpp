@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include "generatorvisitor.h"
 #include "additiveexpression.h"
 #include "blockitem.h"
@@ -27,14 +28,14 @@ void GeneratorVisitor::visit(AdditiveExpression* expr)
         expr->term->accept(this);
     } else {
         expr->tail->accept(this);
-        output << "\tpush \t%eax" << std::endl;
+        print_instr("push", "%eax");
         expr->term->accept(this);
-        output << "\tpop \t%ecx" << std::endl;
+        print_instr("pop", "%ecx");
         if (expr->op.type == TokenType::PLUS) {
-            output << "\taddl \t%ecx, %eax" << std::endl;
+            print_instr("addl", "%ecx", "%eax");
         } else if (expr->op.type == TokenType::MINUS) {
-            output << "\tsubl \t%eax, %ecx" << std::endl;
-            output << "\tmovl \t%ecx, %eax" << std::endl;
+            print_instr("subl", "%eax", "%ecx");
+            print_instr("movl", "%ecx", "%eax");
         }
     }
 }
@@ -47,14 +48,14 @@ void GeneratorVisitor::visit(AndExpression* expr)
         std::string label = get_label();
         std::string end_label = get_label();
         expr->tail->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tjne " << label << std::endl;
-        output << "\tjmp " << end_label << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("jne", label);
+        print_instr("jmp", end_label);
         output << label << ":" << std::endl;
         expr->expr->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tmovl \t$0, %eax" << std::endl;
-        output << "\tsetne \t%al" << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("movl", "$0", "%eax");
+        print_instr("setne", "%al");
         output << end_label << ":" << std::endl;
     }
 }
@@ -76,10 +77,10 @@ void GeneratorVisitor::visit(CondExpression* expr)
         std::string label = get_label();
         std::string end_label = get_label();
         expr->expr->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tje " << label << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("je", label);
         expr->if_expr->accept(this);
-        output << "\tjmp " << end_label << std::endl;
+        print_instr("jmp", end_label);
         output << label << ":" << std::endl;
         expr->else_expr->accept(this);
         output << end_label << ":" << std::endl;
@@ -96,8 +97,8 @@ void GeneratorVisitor::visit(Declaration* decl)
     stack_index -= 4;
     if (decl->expr) {
         decl->expr->accept(this);
-        output << "\tpushl \t%eax" << std::endl;
-        output << "\tmovl \t%eax, " << get_variable(decl->id) << "(%ebp)" << std::endl;
+        print_instr("pushl", "%eax");
+        print_instr("movl", "%eax");
     }
 }
 
@@ -107,17 +108,17 @@ void GeneratorVisitor::visit(EqualityExpression* expr)
         expr->expr->accept(this);
     } else {
         expr->tail->accept(this);
-        output << "\tpush \t%eax" << std::endl;
+        print_instr("push", "%eax");
         expr->expr->accept(this);
-        output << "\tpop \t%ecx" << std::endl;
-        output << "\tcmpl \t%eax, %ecx" << std::endl;
-        output << "\tmovl \t$0, %eax" << std::endl;
+        print_instr("pop", "%ecx");
+        print_instr("cmpl", "%eax", "%ecx");
+        print_instr("movl", "$0", "%eax");
         switch (expr->op.type) {
         case (TokenType::EQ):
-            output << "\tsete \t%al" << std::endl;
+            print_instr("sete", "%al");
             break;
         case (TokenType::NEQ):
-            output << "\tsetne \t%al" << std::endl;
+            print_instr("setne", "%al");
             break;
         default:
              std::cerr << "Unexpected TokenType" << std::endl;
@@ -133,42 +134,42 @@ void GeneratorVisitor::visit(Expression* expr)
         expr->expr->accept(this);
         switch (expr->op.type) {
         case TokenType::PLUS:
-            output << "\taddl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            print_instr("addl", "%eax", get_variable(expr->id) + "(%ebp)");
         case TokenType::MINUS:
-            output << "\tsubl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            print_instr("subl", "%eax", get_variable(expr->id) + "(%ebp)");
         case TokenType::STAR:
-            output << "\timul \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            print_instr("imul", "%eax", get_variable(expr->id) + "(%ebp)");
             break;
         case TokenType::SLASH:
             /* %ecx holds the divisor */
-            output << "\tmovl \t%eax, %ecx" << std::endl;
+            print_instr("movl", "%eax", "%ecx");
             /* %EDX:%EAX hold the previous value of the variable */
-            output << "\tmovl \t " << get_variable(expr->id) << "(%ebp), %eax" << std::endl;
-            output << "\tcdq" << std::endl;
+            print_instr("movl", get_variable(expr->id) + "(%ebp)", "%eax");
+            print_instr("cdq");
             /* execute the division */
-            output << "\tidivl \t%ecx" << std::endl;
+            print_instr("idivl", "%ecx");
             /* move the quotient to the memory location of the variable */
-            output << "\tmovl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            print_instr("movl", "%eax", get_variable(expr->id) + "(%ebp)");
             break;
         case TokenType::MODULO:
             /* %ecx holds the divisor */
-            output << "\tmovl \t%eax, %ecx" << std::endl;
+            print_instr("movl", "%eax", "%ecx");
             /* %EDX:%EAX hold the previous value of the variable */
-            output << "\tmovl \t " << get_variable(expr->id) << "(%ebp), %eax" << std::endl;
-            output << "\tcdq" << std::endl;
+            print_instr("movl", get_variable(expr->id) + "(%ebp)", "%eax");
+            print_instr("cdq");
             /* execute the division */
-            output << "\tidivl \t%ecx" << std::endl;
+            print_instr("idivl", "%ecx");
             /* move the remainder to the memory location of the variable */
-            output << "\tmovl \t%edx, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            print_instr("movl", "%edx", get_variable(expr->id) + "(%ebp)");
             break;
         case TokenType::INVALID:
-            output << "\tmovl \t%eax, " << get_variable(expr->id) << "(%ebp)" << std::endl;
+            print_instr("movl", "%eax", get_variable(expr->id) + "(%ebp)");
             break;
         default:
             ;
         }
         /* make sure that %eax has the correct value in case it is used */
-        output << "\tmovl \t " << get_variable(expr->id) << "(%ebp), %eax" << std::endl;
+        print_instr("movl", get_variable(expr->id) + "(%ebp)", "%eax");
     }
 }
 
@@ -180,15 +181,15 @@ void GeneratorVisitor::visit(OrExpression* expr)
         std::string label = get_label();
         std::string end_label = get_label();
         expr->tail->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tje " << label << std::endl;
-        output << "\tmovl \t$1, %eax" << std::endl;
-        output << "\tjmp " << end_label << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("je", label);
+        print_instr("movl", "$1", "%eax");
+        print_instr("jmp", end_label);
         output << label << ":" << std::endl;
         expr->expr->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tmovl \t$0, %eax" << std::endl;
-        output << "\tsetne \t%al" << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("movl", "$0", "%eax");
+        print_instr("setne", "%al");
         output << end_label << ":" << std::endl;
     }
 }
@@ -199,11 +200,11 @@ void GeneratorVisitor::visit(Factor* fact)
         fact->value->accept(this);
         std::string constant = results.top();
         results.pop();
-        output << "\tmovl\t" << "$" << constant << ", %eax" << std::endl;
+        print_instr("movl", "$" + constant, "%eax");
     } else if (fact->expr) {
         fact->expr->accept(this);
     } else if (!fact->variable.empty()) {
-        output << "\tmovl \t" << get_variable(fact->variable) << "(%ebp), %eax" << std::endl;
+        print_instr("movl", get_variable(fact->variable) + "(%ebp)", "%eax");
     } else if (fact->func) {
         fact->func->accept(this);
     } else {
@@ -229,17 +230,17 @@ void GeneratorVisitor::visit(FunctionDeclaration* func)
 
     output << func->name << ":" << std::endl;
 
-    output << "\tpush \t%ebp" << std::endl;
-    output << "\tmovl \t%esp, %ebp" << std::endl;
+    print_instr("push", "%ebp");
+    print_instr("movl", "%esp", "%ebp");
 
     for (auto& x : func->items) {
         x->accept(this);
     }
 
-    output << "\tmovl \t$0, %eax" << std::endl;
-    output << "\tmovl \t%ebp, %esp" << std::endl;
-    output << "\tpop \t%ebp" << std::endl;
-    output << "\tret" << std::endl;
+    print_instr("movl", "$0", "%eax");
+    print_instr("movl", "%ebp", "%esp");
+    print_instr("pop", "%ebp");
+    print_instr("ret");
 
     variable_map.pop_front();
 }
@@ -248,10 +249,10 @@ void GeneratorVisitor::visit(FunctionCall* func)
 {
     for (int i = func->arguments.size() - 1; i >= 0; i--) {
         func->arguments.at(i)->accept(this);
-        output << "\tpushl \t%eax" << std::endl;
+        print_instr("pushl", "%eax");
     }
-    output << "\tcall \t" << func->id << std::endl;
-    output << "\taddl \t$" << func->arguments.size() * 4 << ", %esp" << std::endl;
+    print_instr("call", func->id);
+    print_instr("addl", "$" + std::to_string(func->arguments.size() * 4), "%esp");
 }
 
 void GeneratorVisitor::visit(Goal* goal)
@@ -273,23 +274,23 @@ void GeneratorVisitor::visit(RelationalExpression* expr)
         expr->expr->accept(this);
     } else {
         expr->tail->accept(this);
-        output << "\tpush \t%eax" << std::endl;
+        print_instr("push", "%eax");
         expr->expr->accept(this);
-        output << "\tpop \t%ecx" << std::endl;
-        output << "\tcmpl \t%eax, %ecx" << std::endl;
-        output << "\tmovl \t$0, %eax" << std::endl;
+        print_instr("pop", "%ecx");
+        print_instr("cmpl", "%eax", "%ecx");
+        print_instr("movl", "$0", "%eax");
         switch (expr->op.type) {
         case (TokenType::GE):
-            output << "\tsetge \t%al" << std::endl;
+            print_instr("setge", "%al");
             break;
         case (TokenType::GT):
-            output << "\tsetg \t%al" << std::endl;
+            print_instr("setg", "%al");
             break;
         case (TokenType::LE):
-            output << "\tsetle \t%al" << std::endl;
+            print_instr("setle", "%al");
             break;
         case (TokenType::LT):
-            output << "\tsetl \t%al" << std::endl;
+            print_instr("setl", "%al");
             break;
         default:
              std::cerr << "Unexpected TokenType" << std::endl;
@@ -308,21 +309,21 @@ void GeneratorVisitor::visit(Statement* stm)
         variable_map.pop_front();
     } else if (stm->stm_type == Type::RETURN) { /* return statement */
         stm->expr->accept(this);
-        output << "\tmovl \t%ebp, %esp" << std::endl;
-        output << "\tpop \t%ebp" << std::endl;
-        output << "\tret" << std::endl;
+        print_instr("movl", "%ebp", "%esp");
+        print_instr("pop", "%ebp");
+        print_instr("ret");
     } else if (stm->stm_type == Type::EMPTY) { /* empty statement */
         ;
     } else if (stm->stm_type == Type::BREAK) { /* empty statement */
         if (break_label.empty()) {
             throw "Illegal break statement";
         }
-        output << "\tjmp " << break_label << std::endl;
+        print_instr("jmp", break_label);
     } else if (stm->stm_type == Type::CONTINUE) { /* empty statement */
         if (continue_label.empty()) {
             throw "Illegal continue statement";
         }
-        output << "\tjmp " << continue_label << std::endl;
+        print_instr("jmp", continue_label);
     } else if (stm->stm_type == Type::WHILE) { /* while statement */
         std::string start_label = get_label();
         std::string end_label = get_label();
@@ -331,10 +332,10 @@ void GeneratorVisitor::visit(Statement* stm)
 
         output << start_label << ":" << std::endl;
         stm->e1->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tje " << end_label << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("je", end_label);
         stm->body->accept(this);
-        output << "\tjmp " << start_label << std::endl;
+        print_instr("jmp", start_label);
         output << end_label << ":" << std::endl;
 
         break_label = "";
@@ -348,9 +349,9 @@ void GeneratorVisitor::visit(Statement* stm)
         output << start_label << ":" << std::endl;
         stm->body->accept(this);
         stm->e1->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tje " << end_label << std::endl;
-        output << "\tjmp " << start_label << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("je", end_label);
+        print_instr("jmp", start_label);
         output << end_label << ":" << std::endl;
 
         break_label = "";
@@ -362,8 +363,8 @@ void GeneratorVisitor::visit(Statement* stm)
         this->continue_label = continue_label;
         break_label = end_label;
 
-        output << "# for" << std::endl;
-        output << "# e1" << std::endl;
+        print_line("# for");
+        print_line("# e1");
         if (stm->d) {
             variable_map.push_front(std::unordered_map<std::string, int>());
             stm->d->accept(this);
@@ -372,20 +373,19 @@ void GeneratorVisitor::visit(Statement* stm)
         }
 
         output << start_label << ":" << std::endl;
-        output << "# e2" << std::endl;
+        print_line("# e2");
         if (stm->e2) {
             stm->e2->accept(this);
-            output << "\tcmpl \t$0, %eax" << std::endl;
-            output << "\tje " << end_label << std::endl;
+            print_instr("cmpl", "$0", "%eax");
+            print_instr("je", end_label);
         }
-        output << "# body" << std::endl;
         stm->body->accept(this);
-        output << "# e3" << std::endl;
+        print_line("# e3");
         output << continue_label << ":" << std::endl;
         if (stm->e3) {
             stm->e3->accept(this);
         }
-        output << "\tjmp " << start_label << std::endl;
+        print_instr("jmp", start_label);
         output << end_label << ":" << std::endl;
 
         if (stm->d) {
@@ -399,15 +399,15 @@ void GeneratorVisitor::visit(Statement* stm)
         std::string label = get_label();
         std::string end_label = get_label();
         stm->expr->accept(this);
-        output << "\tcmpl \t$0, %eax" << std::endl;
+        print_instr("cmpl", "$0", "%eax");
         if (stm->else_stm) {
-            output << "\tje " << label << std::endl;
+            print_instr("je", label);
             stm->if_stm->accept(this);
-            output << "\tjmp " << end_label << std::endl;
+            print_instr("jmp", end_label);
             output << label << ":" << std::endl;
             stm->else_stm->accept(this);
         } else {
-            output << "\tje " << end_label << std::endl;
+            print_instr("je", end_label);
             stm->if_stm->accept(this);
         }
         output << end_label << ":" << std::endl;
@@ -422,22 +422,22 @@ void GeneratorVisitor::visit(Term* term)
         term->fact->accept(this);
     } else {
         term->tail->accept(this);
-        output << "\tpush \t%eax" << std::endl;
+        print_instr("push", "%eax");
         term->fact->accept(this);
         if (term->op.type == TokenType::STAR) {
-            output << "\tpop \t%ecx" << std::endl;
-            output << "\timul \t%ecx, %eax" << std::endl;
+            print_instr("pop", "%ecx");
+            print_instr("imul", "%ecx", "%eax");
         } else if (term->op.type == TokenType::SLASH) {
-            output << "\tmovl \t%eax, %ecx" << std::endl;
-            output << "\tpop \t%eax" << std::endl;
-            output << "\tcdq" << std::endl;
-            output << "\tidivl \t%ecx" << std::endl;
+            print_instr("movl", "%eax", "%ecx");
+            print_instr("pop", "%eax");
+            print_instr("cdq");
+            print_instr("idivl", "%ecx");
         } else if (term->op.type == TokenType::MODULO) {
-            output << "\tmovl \t%eax, %ecx" << std::endl;
-            output << "\tpop \t%eax" << std::endl;
-            output << "\tcdq" << std::endl;
-            output << "\tidivl \t%ecx" << std::endl;
-            output << "\tmovl \t%edx, %eax" << std::endl;
+            print_instr("movl", "%eax", "%ecx");
+            print_instr("pop", "%eax");
+            print_instr("cdq");
+            print_instr("idivl", "%ecx");
+            print_instr("movl", "%edx", "%eax");
         }
     }
 }
@@ -446,35 +446,39 @@ void GeneratorVisitor::visit(UnaryOperator* op)
 {
     switch (op->op.type) {
     case (TokenType::COMPLEMENT):
-        output << "\tnot \t%eax" << std::endl;
+        print_instr("not", "%eax");
         break;
     case (TokenType::MINUS):
-        output << "\tneg \t%eax" << std::endl;
+        print_instr("neg", "%eax");
         break;
     case (TokenType::NEGATION):
-        output << "\tcmpl \t$0, %eax" << std::endl;
-        output << "\tmovl \t$0, %eax" << std::endl;
-        output << "\tsete \t%al" << std::endl;
+        print_instr("cmpl", "$0", "%eax");
+        print_instr("movl", "$0", "%eax");
+        print_instr("sete", "%al");
         break;
     case (TokenType::INCREMENT):
-        output << "\taddl \t$1, %eax" << std::endl;
-        output << "\tmovl \t%eax, " << get_variable(op->id) << "(%ebp)" << std::endl;
+        print_instr("addl", "$1", "%eax");
+        print_instr("movl", "%eax", get_variable(op->id) + "(%ebp)");
         break;
     case (TokenType::DECREMENT):
-        output << "\tsubl \t$1, %eax" << std::endl;
-        output << "\tmovl \t%eax, " << get_variable(op->id) << "(%ebp)" << std::endl;
-        break;
+        print_instr("subl", "$1", "%eax");
+        print_instr("movl", "%eax", get_variable(op->id) + "(%ebp)");
+                break;
     default:
         std::cerr << "Unexpected TokenType" << std::endl;
     }
 }
+
+//---------------------------------------------------------
+//   utility functions
+//---------------------------------------------------------
 
 std::string GeneratorVisitor::get_label()
 {
     return "_label" + std::to_string(label_counter++);
 }
 
-int GeneratorVisitor::get_variable(std::string var_name)
+std::string GeneratorVisitor::get_variable(std::string var_name)
 {
     int result { 0 };
     bool found { false };
@@ -491,5 +495,25 @@ int GeneratorVisitor::get_variable(std::string var_name)
         throw "Error";
     }
 
-    return result;
+    return std::to_string(result);
+}
+
+void GeneratorVisitor::print_line(std::string line)
+{
+    output << line << std::endl;
+}
+
+void GeneratorVisitor::print_instr(std::string instruction)
+{
+    print_line(instruction);
+}
+
+void GeneratorVisitor::print_instr(std::string instruction, std::string arg1)
+{
+    print_line("\t" + instruction + " \t" + arg1);
+}
+
+void GeneratorVisitor::print_instr(std::string instruction, std::string arg1, std::string arg2)
+{
+    print_line("\t" + instruction + " \t" + arg1 + ", " + arg2);
 }
