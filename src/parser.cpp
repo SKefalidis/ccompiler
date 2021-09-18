@@ -303,11 +303,18 @@ FunctionDeclaration* Parser::func_decl()
     std::string name = consume_and_check(TokenType::IDENTIFIER).value;
     consume_and_check(TokenType::LPAREN);
     std::vector<std::pair<std::string, std::string>> parameters {};
-    while (peek().type != TokenType::RPAREN) {
-        consume_and_check(TokenType::INT);
-        if (peek().type == TokenType::IDENTIFIER) {
-            parameters.push_back(std::pair<std::string, std::string>("INT", peek().value));
-            consume();
+    if (peek().type != TokenType::RPAREN) {
+        while (true) {
+            consume_and_check(TokenType::INT);
+            if (peek().type == TokenType::IDENTIFIER) {
+                parameters.push_back(std::pair<std::string, std::string>("INT", peek().value));
+                consume();
+            }
+            if (peek().type == TokenType::RPAREN) {
+                break;
+            } else {
+                consume_and_check(TokenType::COMMA);
+            }
         }
     }
     consume_and_check(TokenType::RPAREN);
@@ -341,12 +348,19 @@ FunctionCall* Parser::func_call()
     std::string id = consume_and_check(TokenType::IDENTIFIER).value;
     consume_and_check(TokenType::LPAREN);
     std::vector<Expression*> expressions {};
-    while (peek().type != TokenType::RPAREN) {
-        if (expr()) {
-            Expression* e = static_cast<Expression*>(get_and_pop());
-            expressions.push_back(e);
-        } else {
-            parse_error("Expected argument");
+    if (peek().type != TokenType::RPAREN) {
+            while (true) {
+            if (expr()) {
+                Expression* e = static_cast<Expression*>(get_and_pop());
+                expressions.push_back(e);
+            } else {
+                parse_error("Expected argument");
+            }
+            if (peek().type == TokenType::RPAREN) {
+                break;
+            } else {
+                consume_and_check(TokenType::COMMA);
+            }
         }
     }
     consume_and_check(TokenType::RPAREN);

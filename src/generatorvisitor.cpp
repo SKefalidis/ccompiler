@@ -214,8 +214,19 @@ void GeneratorVisitor::visit(Factor* fact)
 
 void GeneratorVisitor::visit(FunctionDeclaration* func)
 {
+    if (!func->definition) {
+        return;
+    }
     variable_map.push_front(std::unordered_map<std::string, int>());
     stack_index = -4;
+
+    /* parameters are placed above %ebp */
+    int parameter_offset { 8 };
+    for (auto& p : func->parameters) {
+        variable_map.front().insert({p.second, parameter_offset});
+        parameter_offset += 4;
+    }
+
     output << func->name << ":" << std::endl;
 
     output << "\tpush \t%ebp" << std::endl;
@@ -229,18 +240,26 @@ void GeneratorVisitor::visit(FunctionDeclaration* func)
     output << "\tmovl \t%ebp, %esp" << std::endl;
     output << "\tpop \t%ebp" << std::endl;
     output << "\tret" << std::endl;
+
     variable_map.pop_front();
 }
 
 void GeneratorVisitor::visit(FunctionCall* func)
 {
-
+    for (int i = func->arguments.size() - 1; i >= 0; i--) {
+        func->arguments.at(i)->accept(this);
+        output << "\tpushl \t%eax" << std::endl;
+    }
+    output << "\tcall \t" << func->id << std::endl;
+    output << "\taddl \t$" << func->arguments.size() * 4 << ", %esp" << std::endl;
 }
 
 void GeneratorVisitor::visit(Goal* goal)
 {
-    output << " .globl " << goal->func.at(0)->name << std::endl;
-    goal->func.at(0)->accept(this);
+    for (auto& x : goal->func) {
+        output << " .globl " << x->name << std::endl;
+        x->accept(this);
+    }
 }
 
 void GeneratorVisitor::visit(Literal* lit)
