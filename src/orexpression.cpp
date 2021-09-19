@@ -4,13 +4,13 @@
 
 
 OrExpression::OrExpression(AndExpression* expr)
-    : expr(expr)
+    : expr(expr), Node(NodeType::OR_EXPRESSION)
 {
     ;
 }
 
 OrExpression::OrExpression(AndExpression* expr, Token op, OrExpression* tail)
-    : expr(expr), op(op), tail(tail)
+    : expr(expr), op(op), tail(tail), Node(NodeType::OR_EXPRESSION)
 {
     ;
 }

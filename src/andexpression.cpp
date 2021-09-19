@@ -3,13 +3,13 @@
 #include "equalityexpression.h"
 
 AndExpression::AndExpression(EqualityExpression* expr)
-    : expr(expr)
+    : expr(expr), Node(NodeType::AND_EXPRESSION)
 {
     ;
 }
 
 AndExpression::AndExpression(EqualityExpression* expr, Token op, AndExpression* tail)
-    : expr(expr), op(op), tail(tail)
+    : expr(expr), op(op), tail(tail), Node(NodeType::AND_EXPRESSION)
 {
     ;
 }

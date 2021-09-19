@@ -3,13 +3,13 @@
 #include "additiveexpression.h"
 
 RelationalExpression::RelationalExpression(AdditiveExpression* expr)
-    : expr(expr)
+    : expr(expr), Node(NodeType::RELATIONAL_EXPRESSION)
 {
     ;
 }
 
 RelationalExpression::RelationalExpression(AdditiveExpression* expr, Token op, RelationalExpression* tail)
-    : expr(expr), op(op), tail(tail)
+    : expr(expr), op(op), tail(tail), Node(NodeType::RELATIONAL_EXPRESSION)
 {
     ;
 }

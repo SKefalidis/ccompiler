@@ -93,12 +93,12 @@ void GeneratorVisitor::visit(Declaration* decl)
         std::cerr << "Double declaration" << std::endl;
         exit(1);
     }
-    variable_map.front().insert({decl->id, stack_index});
+    variable_map.front().insert({decl->id, VariableInfo(std::to_string(stack_index), true)});
     stack_index -= 4;
     if (decl->expr) {
         decl->expr->accept(this);
         print_instr("pushl", "%eax");
-        print_instr("movl", "%eax");
+        print_instr("movl", "%eax", get_variable_address(decl->id));
     }
 }
 
@@ -134,42 +134,42 @@ void GeneratorVisitor::visit(Expression* expr)
         expr->expr->accept(this);
         switch (expr->op.type) {
         case TokenType::PLUS:
-            print_instr("addl", "%eax", get_variable(expr->id) + "(%ebp)");
+            print_instr("addl", "%eax", get_variable_address(expr->id));
         case TokenType::MINUS:
-            print_instr("subl", "%eax", get_variable(expr->id) + "(%ebp)");
+            print_instr("subl", "%eax", get_variable_address(expr->id));
         case TokenType::STAR:
-            print_instr("imul", "%eax", get_variable(expr->id) + "(%ebp)");
+            print_instr("imul", "%eax", get_variable_address(expr->id));
             break;
         case TokenType::SLASH:
             /* %ecx holds the divisor */
             print_instr("movl", "%eax", "%ecx");
             /* %EDX:%EAX hold the previous value of the variable */
-            print_instr("movl", get_variable(expr->id) + "(%ebp)", "%eax");
+            print_instr("movl", get_variable_address(expr->id), "%eax");
             print_instr("cdq");
             /* execute the division */
             print_instr("idivl", "%ecx");
             /* move the quotient to the memory location of the variable */
-            print_instr("movl", "%eax", get_variable(expr->id) + "(%ebp)");
+            print_instr("movl", "%eax", get_variable_address(expr->id));
             break;
         case TokenType::MODULO:
             /* %ecx holds the divisor */
             print_instr("movl", "%eax", "%ecx");
             /* %EDX:%EAX hold the previous value of the variable */
-            print_instr("movl", get_variable(expr->id) + "(%ebp)", "%eax");
+            print_instr("movl", get_variable_address(expr->id), "%eax");
             print_instr("cdq");
             /* execute the division */
             print_instr("idivl", "%ecx");
             /* move the remainder to the memory location of the variable */
-            print_instr("movl", "%edx", get_variable(expr->id) + "(%ebp)");
+            print_instr("movl", "%edx", get_variable_address(expr->id));
             break;
         case TokenType::INVALID:
-            print_instr("movl", "%eax", get_variable(expr->id) + "(%ebp)");
+            print_instr("movl", "%eax", get_variable_address(expr->id));
             break;
         default:
             ;
         }
         /* make sure that %eax has the correct value in case it is used */
-        print_instr("movl", get_variable(expr->id) + "(%ebp)", "%eax");
+        print_instr("movl", get_variable_address(expr->id), "%eax");
     }
 }
 
@@ -204,7 +204,7 @@ void GeneratorVisitor::visit(Factor* fact)
     } else if (fact->expr) {
         fact->expr->accept(this);
     } else if (!fact->variable.empty()) {
-        print_instr("movl", get_variable(fact->variable) + "(%ebp)", "%eax");
+        print_instr("movl", get_variable_address(fact->variable), "%eax");
     } else if (fact->func) {
         fact->func->accept(this);
     } else {
@@ -218,13 +218,13 @@ void GeneratorVisitor::visit(FunctionDeclaration* func)
     if (!func->definition) {
         return;
     }
-    variable_map.push_front(std::unordered_map<std::string, int>());
+    variable_map.push_front(std::unordered_map<std::string, VariableInfo>());
     stack_index = -4;
 
     /* parameters are placed above %ebp */
     int parameter_offset { 8 };
     for (auto& p : func->parameters) {
-        variable_map.front().insert({p.second, parameter_offset});
+        variable_map.front().insert({p.second, VariableInfo(std::to_string(parameter_offset), true)});
         parameter_offset += 4;
     }
 
@@ -257,10 +257,54 @@ void GeneratorVisitor::visit(FunctionCall* func)
 
 void GeneratorVisitor::visit(Goal* goal)
 {
-    for (auto& x : goal->func) {
-        output << " .globl " << x->name << std::endl;
-        x->accept(this);
+    variable_map.push_front(std::unordered_map<std::string, VariableInfo>());
+
+    for (auto& x : goal->decls) {
+        if (x->type == NodeType::FUNCTION_DECLARATION) {
+            output << " .globl " << static_cast<FunctionDeclaration*>(x)->name << std::endl;
+            print_line(" .text");
+            x->accept(this);
+        } else { /* global variable */
+            Declaration* decl = static_cast<Declaration*>(x);
+            std::string label;
+
+            /* declare */
+            if (variable_map.front().find(decl->id) != variable_map.front().end()) {
+                label = variable_map.front().at(decl->id).address;
+            } else {
+                label = get_label();
+                variable_map.front().insert({decl->id, VariableInfo(label, false)});
+            }
+
+            /* define */
+            if (decl->expr) {
+                if (variable_map.front().at(decl->id).defined) {
+                    std::cerr << "Global variable redefinition" << std::endl;
+                    throw "Error";
+                } else {
+                    variable_map.front().at(decl->id).defined = true;
+                }
+                print_line(" .globl " + label);
+                print_line(" .data");
+                print_line(" .align 4");
+                print_line(label + ":");
+                print_line(" .long " +  decl->expr->cond_expr->expr->expr->expr->expr->expr->term->fact->value->value); /* instead of crashing it should report an error */
+            }
+        }
     }
+
+    for (auto& var : variable_map.front()) {
+        if (!var.second.defined) {
+            std::string label = var.second.address;
+            print_line(" .globl " + label);
+            print_line(" .bss");
+            print_line(" .align 4");
+            print_line(label + ":");
+            print_line(" .zero 4");
+        }
+    }
+
+    variable_map.pop_front();
 }
 
 void GeneratorVisitor::visit(Literal* lit)
@@ -301,7 +345,7 @@ void GeneratorVisitor::visit(RelationalExpression* expr)
 void GeneratorVisitor::visit(Statement* stm)
 {
     if (stm->block_items.size() > 0) { /* new block */
-        variable_map.push_front(std::unordered_map<std::string, int>());
+        variable_map.push_front(std::unordered_map<std::string, VariableInfo>());
         for (auto& i : stm->block_items) {
             i->accept(this);
         }
@@ -366,7 +410,7 @@ void GeneratorVisitor::visit(Statement* stm)
         print_line("# for");
         print_line("# e1");
         if (stm->d) {
-            variable_map.push_front(std::unordered_map<std::string, int>());
+            variable_map.push_front(std::unordered_map<std::string, VariableInfo>());
             stm->d->accept(this);
         } else if (stm->e1) {
             stm->e1->accept(this);
@@ -458,11 +502,11 @@ void GeneratorVisitor::visit(UnaryOperator* op)
         break;
     case (TokenType::INCREMENT):
         print_instr("addl", "$1", "%eax");
-        print_instr("movl", "%eax", get_variable(op->id) + "(%ebp)");
+        print_instr("movl", "%eax", get_variable_address(op->id));
         break;
     case (TokenType::DECREMENT):
         print_instr("subl", "$1", "%eax");
-        print_instr("movl", "%eax", get_variable(op->id) + "(%ebp)");
+        print_instr("movl", "%eax", get_variable_address(op->id));
                 break;
     default:
         std::cerr << "Unexpected TokenType" << std::endl;
@@ -478,10 +522,11 @@ std::string GeneratorVisitor::get_label()
     return "_label" + std::to_string(label_counter++);
 }
 
-std::string GeneratorVisitor::get_variable(std::string var_name)
+VariableInfo GeneratorVisitor::get_variable_info(std::string var_name)
 {
-    int result { 0 };
+    VariableInfo result("", false, false);
     bool found { false };
+
     for (auto& level : variable_map) {
         if (level.find(var_name) != variable_map.front().end()) {
             result = level.at(var_name);
@@ -495,7 +540,18 @@ std::string GeneratorVisitor::get_variable(std::string var_name)
         throw "Error";
     }
 
-    return std::to_string(result);
+    return result;
+}
+
+std::string GeneratorVisitor::get_variable_address(std::string id)
+{
+    VariableInfo info = get_variable_info(id);
+
+    if (info.is_offset) {
+        return info.address + "(%ebp)";
+    } else {
+        return info.address;
+    }
 }
 
 void GeneratorVisitor::print_line(std::string line)

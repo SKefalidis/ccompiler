@@ -4,13 +4,13 @@
 
 
 Expression::Expression(CondExpression* cond_expr)
-    : cond_expr(cond_expr)
+    : cond_expr(cond_expr), Node(NodeType::EXPRESSION)
 {
     ;
 }
 
 Expression::Expression(std::string id, Expression* expr, Token op)
-    : id(id), expr(expr), op(op)
+    : id(id), expr(expr), op(op), Node(NodeType::EXPRESSION)
 {
     ;
 }

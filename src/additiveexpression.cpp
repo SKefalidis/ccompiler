@@ -3,13 +3,13 @@
 #include "term.h"
 
 AdditiveExpression::AdditiveExpression(Term* term)
-    : term(term)
+    : term(term), Node(NodeType::ADDITIVE_EXPRESSION)
 {
     ;
 }
 
 AdditiveExpression::AdditiveExpression(Term* term, Token op, AdditiveExpression* tail)
-    : term(term), op(op), tail(tail)
+    : term(term), op(op), tail(tail), Node(NodeType::ADDITIVE_EXPRESSION)
 {
     ;
 }

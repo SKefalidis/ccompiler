@@ -1,8 +1,8 @@
 #include <iostream>
 #include "goal.h"
 
-Goal::Goal(std::vector<FunctionDeclaration*> f)
-    : func(f)
+Goal::Goal(std::vector<Node*> d)
+    : decls(d), Node(NodeType::GOAL)
 {
     ;
 }

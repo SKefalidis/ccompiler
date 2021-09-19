@@ -4,13 +4,13 @@
 
 
 EqualityExpression::EqualityExpression(RelationalExpression* expr)
-    : expr(expr)
+    : expr(expr), Node(NodeType::EQUALITY_EXPRESSION)
 {
     ;
 }
 
 EqualityExpression::EqualityExpression(RelationalExpression* expr, Token op, EqualityExpression* tail)
-    : expr(expr), op(op), tail(tail)
+    : expr(expr), op(op), tail(tail), Node(NodeType::EQUALITY_EXPRESSION)
 {
     ;
 }

@@ -10,11 +10,11 @@
 class Goal : public Node
 {
 public:
-    Goal(std::vector<FunctionDeclaration*> f);
+    Goal(std::vector<Node*> d);
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    std::vector<FunctionDeclaration*> func { nullptr };
+    std::vector<Node*> decls { nullptr };
 };
 
 #endif // GOAL_H

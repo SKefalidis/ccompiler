@@ -4,13 +4,13 @@
 
 
 FunctionDeclaration::FunctionDeclaration(std::string name, std::vector<std::pair<std::string, std::string>> parameters)
-    : name(name), parameters(parameters)
+    : name(name), parameters(parameters), Node(NodeType::FUNCTION_DECLARATION)
 {
     definition = false;
 }
 
 FunctionDeclaration::FunctionDeclaration(std::string name, std::vector<std::pair<std::string, std::string>> parameters, std::vector<BlockItem*> items)
-    : name(name), parameters(parameters), items(items)
+    : name(name), parameters(parameters), items(items), Node(NodeType::FUNCTION_DECLARATION)
 {
     definition = true;
 }

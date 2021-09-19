@@ -53,11 +53,19 @@ Goal* Parser::parse()
     Goal* g { nullptr };
 
     current_token = 0;
-    std::vector<FunctionDeclaration*> decls {};
+    std::vector<Node*> decls {};
     while (peek().type != TokenType::END_OF_FILE) {
-        FunctionDeclaration* f = func_decl();
-        nodes.pop();
-        decls.push_back(f);
+        /* FIXME: This will break in the future, instead of this functions should reverse the changes
+         *        when they are invalid and errors should be reported by the caller */
+        if (peek(2).type == TokenType::LPAREN) {
+            FunctionDeclaration* f = func_decl();
+            nodes.pop();
+            decls.push_back(f);
+        } else {
+            Declaration *d = decl();
+            nodes.pop();
+            decls.push_back(d);
+        }
     }
     g = new Goal(decls);
     consume_and_check(TokenType::END_OF_FILE);

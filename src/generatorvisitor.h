@@ -9,6 +9,18 @@
 #include "visitor.h"
 
 
+struct VariableInfo {
+    VariableInfo (std::string address, bool is_offset, bool defined = false) {
+        this->address = address;
+        this->defined = defined;
+        this->is_offset = is_offset;
+    }
+
+    std::string address;
+    bool defined;
+    bool is_offset;
+};
+
 class GeneratorVisitor : public Visitor
 {
 public:
@@ -34,7 +46,8 @@ public:
 
 private:
     std::string get_label();
-    std::string get_variable(std::string var_name);
+    VariableInfo get_variable_info(std::string var_name);
+    std::string get_variable_address(std::string id);
     void print_line(std::string line);
     void print_instr(std::string instruction);
     void print_instr(std::string instruction, std::string arg1);
@@ -44,7 +57,7 @@ private:
     std::stack<std::string> results;
     int label_counter { 0 };
 
-    std::deque<std::unordered_map<std::string, int>> variable_map {};
+    std::deque<std::unordered_map<std::string, VariableInfo>> variable_map {};
     int stack_index;
 
     std::string break_label     { "" };

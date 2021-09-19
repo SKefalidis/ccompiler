@@ -4,31 +4,31 @@
 
 
 Factor::Factor(Literal* literal)
-    : value(literal)
+    : value(literal), Node(NodeType::FACTOR)
 {
     ;
 }
 
 Factor::Factor(UnaryOperator* op, Factor* factor)
-    : unary_op(op), inner_factor(factor)
+    : unary_op(op), inner_factor(factor), Node(NodeType::FACTOR)
 {
     ;
 }
 
 Factor::Factor(Expression* expr)
-    : expr(expr)
+    : expr(expr), Node(NodeType::FACTOR)
 {
     ;
 }
 
 Factor::Factor(std::string variable)
-    : variable(variable)
+    : variable(variable), Node(NodeType::FACTOR)
 {
     ;
 }
 
 Factor::Factor(FunctionCall* func)
-    : func(func)
+    : func(func), Node(NodeType::FACTOR)
 {
     ;
 }

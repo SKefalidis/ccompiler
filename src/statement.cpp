@@ -2,7 +2,7 @@
 #include "statement.h"
 
 Statement::Statement(Expression* expr, bool ret)
-    : expr(expr)
+    : expr(expr), Node(NodeType::STATEMENT)
 {
     if (expr)
         stm_type = ret ? Type::RETURN : Type::OTHER;
@@ -11,37 +11,37 @@ Statement::Statement(Expression* expr, bool ret)
 }
 
 Statement::Statement(Expression* expr, Statement* if_stm, Statement* else_stm)
-    : expr(expr), if_stm(if_stm), else_stm(else_stm)
+    : expr(expr), if_stm(if_stm), else_stm(else_stm), Node(NodeType::STATEMENT)
 {
     ;
 }
 
 Statement::Statement(std::vector<BlockItem*> block_items)
-    : block_items(block_items)
+    : block_items(block_items), Node(NodeType::STATEMENT)
 {
     ;
 }
 
 Statement::Statement(Expression* e1, Expression* e2, Expression* e3, Statement* body)
-    : e1(e1), e2(e2), e3(e3), body(body)
+    : e1(e1), e2(e2), e3(e3), body(body), Node(NodeType::STATEMENT)
 {
     stm_type = Type::FOR;
 }
 
 Statement::Statement(Declaration* d, Expression* e2, Expression* e3, Statement* body)
-    : d(d), e2(e2), e3(e3), body(body)
+    : d(d), e2(e2), e3(e3), body(body), Node(NodeType::STATEMENT)
 {
     stm_type = Type::FOR;
 }
 
 Statement::Statement(Type type, Expression* e1, Statement* body)
-    : stm_type(type), e1(e1), body(body)
+    : stm_type(type), e1(e1), body(body), Node(NodeType::STATEMENT)
 {
     ;
 }
 
 Statement::Statement(Type type)
-    : stm_type(type)
+    : stm_type(type), Node(NodeType::STATEMENT)
 {
     ;
 }

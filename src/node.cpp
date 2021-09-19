@@ -1,5 +1,11 @@
 #include "node.h"
 
+Node::Node(NodeType type)
+    : type(type)
+{
+    ;
+}
+
 std::string Node::tabs_string(int i)
 {
     std::string tabs = "";

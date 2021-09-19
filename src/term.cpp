@@ -4,13 +4,13 @@
 
 
 Term::Term(Factor* fact)
-    : fact(fact)
+    : fact(fact), Node(NodeType::TERM)
 {
     ;
 }
 
 Term::Term(Factor* fact, Token op, Term* tail)
-    : fact(fact), op(op), tail(tail)
+    : fact(fact), op(op), tail(tail), Node(NodeType::TERM)
 {
     ;
 }

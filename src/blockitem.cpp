@@ -1,13 +1,13 @@
 #include "blockitem.h"
 
 BlockItem::BlockItem(Statement* stm)
-    : stm(stm)
+    : stm(stm), Node(NodeType::BLOCK_ITEM)
 {
     ;
 }
 
 BlockItem::BlockItem(Declaration* decl)
-    : decl(decl)
+    : decl(decl), Node(NodeType::BLOCK_ITEM)
 {
     ;
 }
