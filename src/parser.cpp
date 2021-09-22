@@ -54,7 +54,7 @@ Token Parser::consume()
 #define CONSUME_AND_CHECK(t, expected)                                                                  \
     t = consume();                                                                                      \
     if (t.type != expected) {                                                                           \
-        errors.push_back(std::pair<std::string, int>(tokenTypeStrings.at(expected), current_token - 1));\
+        errors.push_back(std::pair<std::string, int>(tokenTypeStrings.at(expected), -(current_token - 1)));\
         backtrack();                                                                                    \
         return nullptr;                                                                                 \
     }
@@ -72,28 +72,44 @@ void* Parser::get_and_pop()
     return x;
 }
 
+/* There are 2 kinds of error logged, peeking and consumption errors.
+ * Consumption errors have a negative value and are prioritized.
+ */
 void Parser::parse_error()
 {
     std::string error = errors.at(0).first;
 
-    int tokens_consumed = errors.at(0).second;
+    int tokens_consumed = abs(errors.at(0).second);
     for (auto& e : errors) {
-        if (e.second > tokens_consumed) {
+        if (abs(e.second) > tokens_consumed) {
             error = e.first;
-            tokens_consumed = e.second;
+            tokens_consumed = abs(e.second);
         }
     }
 
-    std::unordered_set<std::string> expected {};
+    std::unordered_set<std::string> pos_expected {};
     for (auto& e : errors) {
         if (e.second == tokens_consumed) {
-            expected.insert(e.first);
+            pos_expected.insert(e.first);
+        }
+    }
+
+    std::unordered_set<std::string> neg_expected {};
+    for (auto& e : errors) {
+        if (e.second == -tokens_consumed) {
+            neg_expected.insert(e.first);
         }
     }
 
     std::cerr << "Expected one of the following tokens: " << std::endl;
-    for (auto& e : expected) {
-        std::cerr << e << std::endl;
+    if (neg_expected.size() > 0) {
+        for (auto& e : neg_expected) {
+            std::cerr << e << std::endl;
+        }
+    } else {
+        for (auto& e : pos_expected) {
+            std::cerr << e << std::endl;
+        }
     }
 
     throw "Unexpected character";

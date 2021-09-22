@@ -66,6 +66,9 @@ private:
 
     std::stack<Node*> nodes     {};
 
+    /* There are 2 kinds of error logged, peeking and consumption errors.
+     * Consumption errors have a negative value and are prioritized.
+     */
     std::vector<std::pair<std::string, int>> errors {}; /* error_msg, tokens consumed */
 };
 
