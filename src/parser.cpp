@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <unordered_set>
 #include "parser.h"
 
 
@@ -16,21 +17,28 @@ Token Parser::peek(int offset) const
     return tokens.at(current_token + offset);
 }
 
+/* Like peek but also logs errors */
+bool Parser::expect(TokenType expected, int offset)
+{
+    bool result = expected == tokens.at(current_token + offset).type;
+    if (result == false)
+        errors.push_back(std::pair<std::string, int>(tokenTypeStrings.at(expected), current_token + offset));
+    return result;
+}
+
 Token Parser::consume()
 {
     tokens_used.top()++;
     return tokens.at(current_token++);
 }
 
-#define BACKTRACK   \
-    backtrack();    \
-    return nullptr;
-
-#define CONSUME_AND_CHECK(t, expected)                  \
-    t = consume();                                      \
-    if (t.type != expected) {                           \
-        error = tokenTypeStrings.at(expected);          \
-        BACKTRACK;                                      \
+/* consume with added error handling */
+#define CONSUME_AND_CHECK(t, expected)                                                                  \
+    t = consume();                                                                                      \
+    if (t.type != expected) {                                                                           \
+        errors.push_back(std::pair<std::string, int>(tokenTypeStrings.at(expected), current_token - 1));\
+        backtrack();                                                                                    \
+        return nullptr;                                                                                 \
     }
 
 void Parser::backtrack()
@@ -46,10 +54,31 @@ void* Parser::get_and_pop()
     return x;
 }
 
-void Parser::parse_error(std::string error)
+void Parser::parse_error()
 {
-    std::cerr << "Expected '" + error + "'" << std::endl;
-    throw "Expected '" + error + "'";
+    std::string error = errors.at(0).first;
+
+    int tokens_consumed = errors.at(0).second;
+    for (auto& e : errors) {
+        if (e.second > tokens_consumed) {
+            error = e.first;
+            tokens_consumed = e.second;
+        }
+    }
+
+    std::unordered_set<std::string> expected {};
+    for (auto& e : errors) {
+        if (e.second == tokens_consumed) {
+            expected.insert(e.first);
+        }
+    }
+
+    std::cerr << "Expected one of the following tokens: " << std::endl;
+    for (auto& e : expected) {
+        std::cerr << e << std::endl;
+    }
+
+    throw "Unexpected character";
 }
 
 //---------------------------------------------------------
@@ -72,7 +101,7 @@ Goal* Parser::parse()
             nodes.pop();
             decls.push_back(d);
         } else {
-            parse_error(error);
+            parse_error();
         }
     }
     CONSUME_AND_CHECK(t, TokenType::END_OF_FILE);
@@ -89,19 +118,18 @@ AdditiveExpression* Parser::add_expr()
 
     if (term()) {
         e = new AdditiveExpression(static_cast<Term*>(get_and_pop()));
-        Token t = peek();
-        while (t.type == TokenType::PLUS || t.type == TokenType::MINUS) {
+        while (expect(TokenType::PLUS) || expect(TokenType::MINUS)) {
             Token op = consume();
             Term* next_term = term();
             nodes.pop();
             e = new AdditiveExpression(next_term, op, e);
-            t = peek();
         }
         nodes.push(e);
         tokens_used.pop();
         return e;
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 }
 
@@ -112,19 +140,18 @@ AndExpression* Parser::and_expr()
 
     if (eq_expr()) {
         e = new AndExpression(static_cast<EqualityExpression*>(get_and_pop()));
-        Token t = peek();
-        while (t.type == TokenType::AND) {
+        while (expect(TokenType::AND)) {
             Token op = consume();
             EqualityExpression* next_expr = eq_expr();
             nodes.pop();
             e = new AndExpression(next_expr, op, e);
-            t = peek();
         }
         nodes.push(e);
         tokens_used.pop();
         return e;
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 }
 
@@ -138,7 +165,7 @@ BlockItem* Parser::block_item()
     } else if (stm()) {
         b = new BlockItem(static_cast<Statement*>(get_and_pop()));
     } else {
-        BACKTRACK
+        backtrack(); return nullptr;
     }
     nodes.push(b);
 
@@ -156,7 +183,7 @@ CondExpression* Parser::cond_expr()
         OrExpression* or_expr = static_cast<OrExpression*>(get_and_pop());
         Expression* if_expr { nullptr };
         CondExpression* else_expr { nullptr };
-        if (peek().type == TokenType::QUESTION_MARK) {
+        if (expect(TokenType::QUESTION_MARK)) {
             consume();
             if_expr = expr();
             CONSUME_AND_CHECK(t, TokenType::COLON);
@@ -167,7 +194,8 @@ CondExpression* Parser::cond_expr()
         tokens_used.pop();
         return e;
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 }
 
@@ -181,7 +209,7 @@ Declaration* Parser::decl()
     CONSUME_AND_CHECK(t, TokenType::IDENTIFIER);
     std::string id = t.value;
     Expression* e = nullptr;
-    if (peek().type == TokenType::ASSIGN) {
+    if (expect(TokenType::ASSIGN)) {
         consume();
         e = expr();
         nodes.pop();
@@ -201,19 +229,18 @@ EqualityExpression* Parser::eq_expr()
 
     if (rel_expr()) {
         e = new EqualityExpression(static_cast<RelationalExpression*>(get_and_pop()));
-        Token t = peek();
-        while (t.type == TokenType::EQ || t.type == TokenType::NEQ) {
+        while (expect(TokenType::EQ) || expect(TokenType::NEQ)) {
             Token op = consume();
             RelationalExpression* next_expr = rel_expr();
             nodes.pop();
             e = new EqualityExpression(next_expr, op, e);
-            t = peek();
         }
         nodes.push(e);
         tokens_used.pop();
         return e;
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 }
 
@@ -222,65 +249,73 @@ Expression* Parser::expr()
     Expression* e { nullptr };
     tokens_used.push(0);
 
-    if (peek().type == TokenType::IDENTIFIER &&
-            (peek(1).type == TokenType::ASSIGN
-            || peek(1).type == TokenType::PLUS_ASSIGN
-            || peek(1).type == TokenType::MINUS_ASSIGN
-            || peek(1).type == TokenType::MULT_ASSIGN
-            || peek(1).type == TokenType::DIV_ASSIGN
-            || peek(1).type == TokenType::MOD_ASSIGN)) {
-        Token t;
-
-        /* get the operator if the operation is not a simple assignment */
-        switch (peek(1).type) {
-        case TokenType::PLUS_ASSIGN:
-            t = Token(TokenType::PLUS, tokenTypeStrings.at(TokenType::PLUS));
-            break;
-        case TokenType::MINUS_ASSIGN:
-            t = Token(TokenType::MINUS, tokenTypeStrings.at(TokenType::MINUS));
-            break;
-        case TokenType::MULT_ASSIGN:
-            t = Token(TokenType::STAR, tokenTypeStrings.at(TokenType::STAR));
-            break;
-        case TokenType::DIV_ASSIGN:
-            t = Token(TokenType::SLASH, tokenTypeStrings.at(TokenType::SLASH));
-            break;
-        case TokenType::MOD_ASSIGN:
-            t = Token(TokenType::MODULO, tokenTypeStrings.at(TokenType::MODULO));
-            break;
-        default:
-            t = Token(TokenType::INVALID, tokenTypeStrings.at(TokenType::INVALID));
-        }
-
+    if (expect(TokenType::IDENTIFIER)) {
         std::string id = consume().value;
-        consume(); /* consume (x)-assign operator */
-        Expression* r_expr = expr();
-        nodes.pop();
-        e = new Expression(id, r_expr, t);
-        nodes.push(e);
-    } else if (cond_expr()) {
+        if (expect(TokenType::ASSIGN)
+            || expect(TokenType::PLUS_ASSIGN)
+            || expect(TokenType::MINUS_ASSIGN)
+            || expect(TokenType::MULT_ASSIGN)
+            || expect(TokenType::DIV_ASSIGN)
+            || expect(TokenType::MOD_ASSIGN)) {
+            Token t = consume(); /* consume (x)-assign operator */
+
+            /* get the operator if the operation is not a simple assignment */
+            switch (t.type) {
+            case TokenType::PLUS_ASSIGN:
+                t = Token(TokenType::PLUS, tokenTypeStrings.at(TokenType::PLUS));
+                break;
+            case TokenType::MINUS_ASSIGN:
+                t = Token(TokenType::MINUS, tokenTypeStrings.at(TokenType::MINUS));
+                break;
+            case TokenType::MULT_ASSIGN:
+                t = Token(TokenType::STAR, tokenTypeStrings.at(TokenType::STAR));
+                break;
+            case TokenType::DIV_ASSIGN:
+                t = Token(TokenType::SLASH, tokenTypeStrings.at(TokenType::SLASH));
+                break;
+            case TokenType::MOD_ASSIGN:
+                t = Token(TokenType::MODULO, tokenTypeStrings.at(TokenType::MODULO));
+                break;
+            default:
+                t = Token(TokenType::INVALID, tokenTypeStrings.at(TokenType::INVALID));
+            }
+
+            Expression* r_expr = expr();
+            nodes.pop();
+            e = new Expression(id, r_expr, t);
+            nodes.push(e);
+            tokens_used.pop();
+            return e;
+        }
+    }
+
+    backtrack();
+    tokens_used.push(0);
+
+    if (cond_expr()) {
         CondExpression* expr = static_cast<CondExpression*>(get_and_pop());
         e = new Expression(expr);
         nodes.push(e);
-    } else {
-        BACKTRACK
+        tokens_used.pop();
+        return e;
     }
 
-    return e;
+    return nullptr;
 }
 
 Expression* Parser::expr_optional()
 {
     tokens_used.push(0);
 
-    if (peek().type == TokenType::SEMICOLON || peek().type == TokenType::RPAREN) {
+    if (expect(TokenType::SEMICOLON) || expect(TokenType::RPAREN)) {
         tokens_used.pop();
         return nullptr;
     } else if (Expression* e = expr()) {
         tokens_used.pop();
         return e;
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 }
 
@@ -291,17 +326,16 @@ OrExpression* Parser::or_expr()
 
     if (and_expr()) {
         e = new OrExpression(static_cast<AndExpression*>(get_and_pop()));
-        Token t = peek();
-        while (t.type == TokenType::OR) {
+        while (expect(TokenType::OR)) {
             Token op = consume();
             AndExpression* next_expr = and_expr();
             nodes.pop();
             e = new OrExpression(next_expr, op, e);
-            t = peek();
         }
         nodes.push(e);
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 
     tokens_used.pop();
@@ -314,11 +348,11 @@ Factor* Parser::fact()
     Token t;
     tokens_used.push(0);
 
-    if (peek().type == TokenType::INTEGER_LITERAL) {
+    if (expect(TokenType::INTEGER_LITERAL)) {
         t = consume();
         f = new Factor(new IntLiteral(t.value));
-    } else if (peek().type == TokenType::IDENTIFIER) {
-        if (peek(1).type == TokenType::LPAREN) {
+    } else if (expect(TokenType::IDENTIFIER)) {
+        if (expect(TokenType::LPAREN, 1)) {
             FunctionCall* func = func_call();
             nodes.pop();
             f = new Factor(func);
@@ -326,7 +360,7 @@ Factor* Parser::fact()
             std::string variable = consume().value;
             f = new Factor(variable);
         }
-    } else if (peek().type == TokenType::LPAREN) {
+    } else if (expect(TokenType::LPAREN)) {
         consume();
         Expression* e = expr();
         nodes.pop();
@@ -337,7 +371,8 @@ Factor* Parser::fact()
         UnaryOperator* op = static_cast<UnaryOperator*>(get_and_pop());
         f = new Factor(op, inner_factor);
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
     nodes.push(f);
 
@@ -356,14 +391,13 @@ FunctionDeclaration* Parser::func_decl()
     std::string name = t.value;
     CONSUME_AND_CHECK(t, TokenType::LPAREN);
     std::vector<std::pair<std::string, std::string>> parameters {};
-    if (peek().type != TokenType::RPAREN) {
+    if (!expect(TokenType::RPAREN)) {
         while (true) {
             CONSUME_AND_CHECK(t, TokenType::INT);
-            if (peek().type == TokenType::IDENTIFIER) {
-                parameters.push_back(std::pair<std::string, std::string>("INT", peek().value));
-                consume();
+            if (expect(TokenType::IDENTIFIER)) {
+                parameters.push_back(std::pair<std::string, std::string>("INT", consume().value));
             }
-            if (peek().type == TokenType::RPAREN) {
+            if (expect(TokenType::RPAREN)) {
                 break;
             } else {
                 CONSUME_AND_CHECK(t, TokenType::COMMA);
@@ -371,19 +405,20 @@ FunctionDeclaration* Parser::func_decl()
         }
     }
     CONSUME_AND_CHECK(t, TokenType::RPAREN);
-    if (peek().type == TokenType::SEMICOLON) {
+    if (expect(TokenType::SEMICOLON)) {
         consume();
         f = new FunctionDeclaration(name, parameters);
     } else {
         /* also a definition */
         CONSUME_AND_CHECK(t, TokenType::LBRACE);
         std::vector<BlockItem*> items {};
-        while (peek().type != TokenType::RBRACE) {
+        while (!expect(TokenType::RBRACE)) {
             if (block_item()) {
                 BlockItem* b = static_cast<BlockItem*>(get_and_pop()); /* TODO: use `auto` */
                 items.push_back(b);
             } else {
-                BACKTRACK
+                backtrack();
+                return nullptr;
             }
         }
         CONSUME_AND_CHECK(t, TokenType::RBRACE);
@@ -399,20 +434,22 @@ FunctionCall* Parser::func_call()
 {
     FunctionCall* f { nullptr };
     Token t;
+    tokens_used.push(0);
 
     CONSUME_AND_CHECK(t, TokenType::IDENTIFIER);
     std::string id = t.value;
     CONSUME_AND_CHECK(t, TokenType::LPAREN);
     std::vector<Expression*> expressions {};
-    if (peek().type != TokenType::RPAREN) {
+    if (!expect(TokenType::RPAREN)) {
             while (true) {
             if (expr()) {
                 Expression* e = static_cast<Expression*>(get_and_pop());
                 expressions.push_back(e);
             } else {
-                parse_error("Expected argument");
+                backtrack();
+                return nullptr;
             }
-            if (peek().type == TokenType::RPAREN) {
+            if (expect(TokenType::RPAREN)) {
                 break;
             } else {
                 CONSUME_AND_CHECK(t, TokenType::COMMA);
@@ -423,6 +460,7 @@ FunctionCall* Parser::func_call()
     f = new FunctionCall(id, expressions);
     nodes.push(f);
 
+    tokens_used.pop();
     return f;
 }
 
@@ -433,17 +471,16 @@ RelationalExpression* Parser::rel_expr()
 
     if (add_expr()) {
         e = new RelationalExpression(static_cast<AdditiveExpression*>(get_and_pop()));
-        Token t = peek();
-        while (t.type == TokenType::LT || t.type == TokenType::LE || t.type == TokenType::GT || t.type == TokenType::GE) {
+        while (expect(TokenType::LT) || expect(TokenType::LE) || expect(TokenType::GT) || expect(TokenType::GE)) {
             Token op = consume();
             AdditiveExpression* next_expr = add_expr();
             nodes.pop();
             e = new RelationalExpression(next_expr, op, e);
-            t = peek();
         }
         nodes.push(e);
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 
     tokens_used.pop();
@@ -456,24 +493,28 @@ Statement* Parser::stm()
     Token t;
     tokens_used.push(0);
 
-    if (peek().type == TokenType::RETURN) {
+    if (expect(TokenType::RETURN)) {
         consume();
-        Expression* e = expr();
-        nodes.pop();
-        CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
-        s = new Statement(e, true);
-    } else if (peek().type == TokenType::BREAK) {
+        if (Expression* e = expr()) {
+            nodes.pop();
+            CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
+            s = new Statement(e, true);
+        } else {
+            backtrack();
+            return nullptr;
+        }
+    } else if (expect(TokenType::BREAK)) {
         consume();
         CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         s = new Statement(Type::BREAK);
-    } else if (peek().type == TokenType::CONTINUE) {
+    } else if (expect(TokenType::CONTINUE)) {
         consume();
         CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         s = new Statement(Type::CONTINUE);
-    } else if (peek().type == TokenType::LBRACE) {
+    } else if (expect(TokenType::LBRACE)) {
         consume();
         std::vector<BlockItem*> block_items;
-        while (peek().type != TokenType::RBRACE) {
+        while (!expect(TokenType::RBRACE)) {
             if (block_item()) {
                 BlockItem* b = static_cast<BlockItem*>(get_and_pop()); /* TODO: use `auto` */
                 block_items.push_back(b);
@@ -483,7 +524,7 @@ Statement* Parser::stm()
         }
         CONSUME_AND_CHECK(t, TokenType::RBRACE);
         s = new Statement(block_items);
-    } else if (peek().type == TokenType::IF) {
+    } else if (expect(TokenType::IF)) {
         consume();
         CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Expression* e = expr();
@@ -492,13 +533,13 @@ Statement* Parser::stm()
         Statement* if_stm = stm();
         nodes.pop();
         Statement* else_stm { nullptr };
-        if (peek().type == TokenType::ELSE) {
+        if (expect(TokenType::ELSE)) {
             consume();
             else_stm = stm();
             nodes.pop();
         }
         s = new Statement(e, if_stm, else_stm);
-    } else if (peek().type == TokenType::FOR) {
+    } else if (expect(TokenType::FOR)) {
         consume();
         CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Declaration* d { nullptr };
@@ -529,7 +570,7 @@ Statement* Parser::stm()
             s = new Statement(d, e2, e3, body);
         else
             s = new Statement(e1, e2, e3, body);
-    } else if (peek().type == TokenType::WHILE) {
+    } else if (expect(TokenType::WHILE)) {
         consume();
         CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Expression* e = expr();
@@ -538,7 +579,7 @@ Statement* Parser::stm()
         Statement* body = stm();
         nodes.pop();
         s = new Statement(Type::WHILE, e, body);
-    } else if (peek().type == TokenType::DO) {
+    } else if (expect(TokenType::DO)) {
         consume();
         Statement* body = stm();
         nodes.pop();
@@ -570,19 +611,18 @@ Term* Parser::term()
 
     if (fact()) {
         term = new Term(static_cast<Factor*>(get_and_pop()));
-        Token t = peek();
-        while (t.type == TokenType::STAR || t.type == TokenType::SLASH || t.type == TokenType::MODULO) {
+        while (expect(TokenType::STAR) || expect(TokenType::SLASH) || expect(TokenType::MODULO)) {
             Token op = consume();
             Factor* next_fact = fact();
             nodes.pop();
             term = new Term(next_fact, op, term);
-            t = peek();
         }
         nodes.push(term);
         tokens_used.pop();
         return term;
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 }
 
@@ -591,24 +631,24 @@ UnaryOperator* Parser::unary_op()
     UnaryOperator* op { nullptr };
     tokens_used.push(0);
 
-    auto type = peek().type;
-    if (type == TokenType::COMPLEMENT || type == TokenType::MINUS || type == TokenType::NEGATION) {
+    if (expect(TokenType::COMPLEMENT) || expect(TokenType::MINUS) || expect(TokenType::NEGATION)) {
         Token t = consume();
         op = new UnaryOperator(t);
         nodes.push(op);
-    } else if (type == TokenType::INCREMENT || type == TokenType::DECREMENT) {
+    } else if (expect(TokenType::INCREMENT) || expect(TokenType::DECREMENT)) {
         Token t = consume();
         std::string id { "" };
         for (int i = 0; true; i++) {
-            if (peek(i).type == TokenType::IDENTIFIER) {
-                id = peek(i).value;
+            if (expect(TokenType::IDENTIFIER, i)) {
+                id = tokens.at(current_token + i).value;
                 break;
             }
         }
         op = new UnaryOperator(t, id);
         nodes.push(op);
     } else {
-        BACKTRACK
+        backtrack();
+        return nullptr;
     }
 
     tokens_used.pop();

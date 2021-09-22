@@ -33,12 +33,13 @@ public:
 
 private:
     Token peek(int offset = 0) const;
+    bool expect(TokenType expected, int offset = 0);
     Token consume();
     void backtrack();
 
     void* get_and_pop();
 
-    void parse_error(std::string error);
+    void parse_error();
 
     // TODO: make stack optional!
     AdditiveExpression*     add_expr();
@@ -64,7 +65,7 @@ private:
 
     std::stack<Node*> nodes     {};
 
-    std::string error           {};
+    std::vector<std::pair<std::string, int>> errors {}; /* error_msg, tokens consumed */
 };
 
 #endif // PARSER_H

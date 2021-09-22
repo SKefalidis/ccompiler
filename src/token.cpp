@@ -35,6 +35,8 @@ std::unordered_map<TokenType, std::string> tokenTypeStrings {
 
     { TokenType::RETURN,            "RETURN",           },
     { TokenType::INT,               "INT",              },
+    { TokenType::IF,                "IF",               },
+    { TokenType::ELSE,              "ELSE",             },
     { TokenType::FOR,               "FOR",              },
     { TokenType::WHILE,             "WHILE",            },
     { TokenType::DO,                "DO",               },
