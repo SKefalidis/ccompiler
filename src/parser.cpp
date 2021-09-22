@@ -424,7 +424,11 @@ FunctionDeclaration* Parser::func_decl()
     std::vector<std::pair<std::string, std::string>> parameters {};
     if (!expect(TokenType::RPAREN)) {
         while (true) {
-            CONSUME_AND_CHECK(t, TokenType::INT);
+            if (!expect(TokenType::INT)) {
+                break;
+            } else {
+                consume();
+            }
             if (expect(TokenType::IDENTIFIER)) {
                 parameters.push_back(std::pair<std::string, std::string>("INT", consume().value));
             }
