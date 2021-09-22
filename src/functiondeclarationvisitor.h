@@ -33,7 +33,7 @@ public:
 private:
     std::unordered_map<std::string, std::list<FunctionDeclaration*>> declared_functions {};
     std::list<std::string> global_variables {};
-    bool is_in_top_level { false };
+    bool in_const_expression { false };
 };
 
 #endif // FUNCTIONDECLARATIONVISITOR_H

@@ -64,10 +64,6 @@ void FunctionDeclarationVisitor::visit(CondExpression* expr)
 
 void FunctionDeclarationVisitor::visit(Declaration* decl)
 {
-    if (is_in_top_level) {
-        global_variables.push_front(decl->id);
-        is_in_top_level = false;
-    }
     if (decl->expr) {
         decl->expr->accept(this);
     }
@@ -109,7 +105,10 @@ void FunctionDeclarationVisitor::visit(Factor* fact)
     } else if (fact->expr) {
         fact->expr->accept(this);
     } else if (!fact->variable.empty()) {
-        ;
+        if (in_const_expression) {
+            std::cerr << "Cannot use variables in constant expression" << std::endl;
+            throw "Constant expression error!";
+        }
     } else if (fact->func) {
         fact->func->accept(this);
     } else {
@@ -121,7 +120,6 @@ void FunctionDeclarationVisitor::visit(Factor* fact)
 // FIXME: Using exceptions for program flow isn't a great idea...
 void FunctionDeclarationVisitor::visit(FunctionDeclaration* func)
 {
-    is_in_top_level = false;
     try {
         /* check argument count */
         auto declaration = declared_functions.at(func->name).front();
@@ -170,9 +168,22 @@ void FunctionDeclarationVisitor::visit(FunctionCall* func)
 void FunctionDeclarationVisitor::visit(Goal* goal)
 {
     for (auto& x : goal->decls) {
-        is_in_top_level = true;
-        x->accept(this);
+        if (x->type == NodeType::FUNCTION_DECLARATION) {
+            x->accept(this);
+        } else { /* global variable */
+            Declaration* decl = static_cast<Declaration*>(x);
+            global_variables.push_front(decl->id);
+
+            /* define */
+            if (decl->expr) {
+                in_const_expression = true;
+                decl->expr->accept(this);
+                in_const_expression = false;
+            }
+        }
     }
+
+    /* check for name collision between functions and global variables */
     for (auto& x : global_variables) {
         if (declared_functions.find(x) != declared_functions.end()) {
             std::cerr << "Function and global variable with the same name: " << x << std::endl;
