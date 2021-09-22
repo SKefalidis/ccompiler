@@ -35,6 +35,7 @@ private:
     Token peek(int offset = 0) const;
     Token consume();
     Token consume_and_check(TokenType expected);
+    void backtrack();
 
     void* get_and_pop();
 
@@ -58,8 +59,9 @@ private:
     Term*                   term();
     UnaryOperator*          unary_op();
 
-    std::vector<Token> tokens;
+    std::vector<Token> tokens   {};
     int current_token           { 0 };
+    std::stack<int> tokens_used {};
 
     std::stack<Node*> nodes     {};
 };

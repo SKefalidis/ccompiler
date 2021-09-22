@@ -18,6 +18,7 @@ Token Parser::peek(int offset) const
 
 Token Parser::consume()
 {
+    tokens_used.top()++;
     return tokens.at(current_token++);
 }
 
@@ -29,6 +30,12 @@ Token Parser::consume_and_check(TokenType expected)
         return Token(TokenType::INVALID, "invalid");
     }
     return t;
+}
+
+void Parser::backtrack()
+{
+    current_token -= tokens_used.top();
+    tokens_used.pop();
 }
 
 void* Parser::get_and_pop()
