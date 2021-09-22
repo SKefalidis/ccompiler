@@ -34,7 +34,6 @@ public:
 private:
     Token peek(int offset = 0) const;
     Token consume();
-    Token consume_and_check(TokenType expected);
     void backtrack();
 
     void* get_and_pop();
@@ -64,6 +63,8 @@ private:
     std::stack<int> tokens_used {};
 
     std::stack<Node*> nodes     {};
+
+    std::string error           {};
 };
 
 #endif // PARSER_H

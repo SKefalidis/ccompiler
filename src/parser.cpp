@@ -22,15 +22,16 @@ Token Parser::consume()
     return tokens.at(current_token++);
 }
 
-Token Parser::consume_and_check(TokenType expected)
-{
-    Token t = consume();
-    if (t.type != expected) {
-        parse_error(tokenTypeStrings.at(expected));
-        return Token(TokenType::INVALID, "invalid");
+#define BACKTRACK   \
+    backtrack();    \
+    return nullptr;
+
+#define CONSUME_AND_CHECK(t, expected)                  \
+    t = consume();                                      \
+    if (t.type != expected) {                           \
+        error = tokenTypeStrings.at(expected);          \
+        BACKTRACK;                                      \
     }
-    return t;
-}
 
 void Parser::backtrack()
 {
@@ -58,31 +59,33 @@ void Parser::parse_error(std::string error)
 Goal* Parser::parse()
 {
     Goal* g { nullptr };
+    Token t;
+    tokens_used.push(0);
 
     current_token = 0;
     std::vector<Node*> decls {};
     while (peek().type != TokenType::END_OF_FILE) {
-        /* FIXME: This will break in the future, instead of this functions should reverse the changes
-         *        when they are invalid and errors should be reported by the caller */
-        if (peek(2).type == TokenType::LPAREN) {
-            FunctionDeclaration* f = func_decl();
+        if (FunctionDeclaration* f = func_decl()) {
             nodes.pop();
             decls.push_back(f);
-        } else {
-            Declaration *d = decl();
+        } else if (Declaration *d = decl()) {
             nodes.pop();
             decls.push_back(d);
+        } else {
+            parse_error(error);
         }
     }
+    CONSUME_AND_CHECK(t, TokenType::END_OF_FILE);
     g = new Goal(decls);
-    consume_and_check(TokenType::END_OF_FILE);
 
+    tokens_used.pop();
     return g;
 }
 
 AdditiveExpression* Parser::add_expr()
 {
     AdditiveExpression* e { nullptr };
+    tokens_used.push(0);
 
     if (term()) {
         e = new AdditiveExpression(static_cast<Term*>(get_and_pop()));
@@ -95,14 +98,17 @@ AdditiveExpression* Parser::add_expr()
             t = peek();
         }
         nodes.push(e);
+        tokens_used.pop();
+        return e;
+    } else {
+        BACKTRACK
     }
-
-    return e;
 }
 
 AndExpression* Parser::and_expr()
 {
     AndExpression* e { nullptr };
+    tokens_used.push(0);
 
     if (eq_expr()) {
         e = new AndExpression(static_cast<EqualityExpression*>(get_and_pop()));
@@ -115,28 +121,36 @@ AndExpression* Parser::and_expr()
             t = peek();
         }
         nodes.push(e);
+        tokens_used.pop();
+        return e;
+    } else {
+        BACKTRACK
     }
-
-    return e;
 }
 
 BlockItem* Parser::block_item()
 {
     BlockItem* b { nullptr };
+    tokens_used.push(0);
 
-    if (peek().type == TokenType::INT && decl()) {
+    if (decl()) {
         b = new BlockItem(static_cast<Declaration*>(get_and_pop()));
     } else if (stm()) {
         b = new BlockItem(static_cast<Statement*>(get_and_pop()));
+    } else {
+        BACKTRACK
     }
     nodes.push(b);
 
+    tokens_used.pop();
     return b;
 }
 
 CondExpression* Parser::cond_expr()
 {
     CondExpression* e { nullptr };
+    Token t;
+    tokens_used.push(0);
 
     if (or_expr()) {
         OrExpression* or_expr = static_cast<OrExpression*>(get_and_pop());
@@ -145,38 +159,45 @@ CondExpression* Parser::cond_expr()
         if (peek().type == TokenType::QUESTION_MARK) {
             consume();
             if_expr = expr();
-            consume_and_check(TokenType::COLON);
+            CONSUME_AND_CHECK(t, TokenType::COLON);
             else_expr = cond_expr();
         }
         e = new CondExpression(or_expr, if_expr, else_expr);
         nodes.push(e);
+        tokens_used.pop();
+        return e;
+    } else {
+        BACKTRACK
     }
-
-    return e;
 }
 
 Declaration* Parser::decl()
 {
     Declaration* d { nullptr };
+    Token t;
+    tokens_used.push(0);
 
-    consume_and_check(TokenType::INT);
-    std::string id = consume_and_check(TokenType::IDENTIFIER).value;
+    CONSUME_AND_CHECK(t, TokenType::INT);
+    CONSUME_AND_CHECK(t, TokenType::IDENTIFIER);
+    std::string id = t.value;
     Expression* e = nullptr;
     if (peek().type == TokenType::ASSIGN) {
         consume();
         e = expr();
         nodes.pop();
     }
-    consume_and_check(TokenType::SEMICOLON);
+    CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
     d = new Declaration(id, e);
     nodes.push(d);
 
+    tokens_used.pop();
     return d;
 }
 
 EqualityExpression* Parser::eq_expr()
 {
     EqualityExpression* e { nullptr };
+    tokens_used.push(0);
 
     if (rel_expr()) {
         e = new EqualityExpression(static_cast<RelationalExpression*>(get_and_pop()));
@@ -189,14 +210,17 @@ EqualityExpression* Parser::eq_expr()
             t = peek();
         }
         nodes.push(e);
+        tokens_used.pop();
+        return e;
+    } else {
+        BACKTRACK
     }
-
-    return e;
 }
 
 Expression* Parser::expr()
 {
     Expression* e { nullptr };
+    tokens_used.push(0);
 
     if (peek().type == TokenType::IDENTIFIER &&
             (peek(1).type == TokenType::ASSIGN
@@ -238,6 +262,8 @@ Expression* Parser::expr()
         CondExpression* expr = static_cast<CondExpression*>(get_and_pop());
         e = new Expression(expr);
         nodes.push(e);
+    } else {
+        BACKTRACK
     }
 
     return e;
@@ -245,20 +271,23 @@ Expression* Parser::expr()
 
 Expression* Parser::expr_optional()
 {
+    tokens_used.push(0);
+
     if (peek().type == TokenType::SEMICOLON || peek().type == TokenType::RPAREN) {
+        tokens_used.pop();
         return nullptr;
-    } else {
-        Expression* e = expr();
-        if (!e) {
-            throw "Crash";
-        }
+    } else if (Expression* e = expr()) {
+        tokens_used.pop();
         return e;
+    } else {
+        BACKTRACK
     }
 }
 
 OrExpression* Parser::or_expr()
 {
     OrExpression* e { nullptr };
+    tokens_used.push(0);
 
     if (and_expr()) {
         e = new OrExpression(static_cast<AndExpression*>(get_and_pop()));
@@ -271,17 +300,22 @@ OrExpression* Parser::or_expr()
             t = peek();
         }
         nodes.push(e);
+    } else {
+        BACKTRACK
     }
 
+    tokens_used.pop();
     return e;
 }
 
 Factor* Parser::fact()
 {
     Factor* f { nullptr };
+    Token t;
+    tokens_used.push(0);
 
     if (peek().type == TokenType::INTEGER_LITERAL) {
-        Token t = consume();
+        t = consume();
         f = new Factor(new IntLiteral(t.value));
     } else if (peek().type == TokenType::IDENTIFIER) {
         if (peek(1).type == TokenType::LPAREN) {
@@ -296,31 +330,35 @@ Factor* Parser::fact()
         consume();
         Expression* e = expr();
         nodes.pop();
-        consume_and_check(TokenType::RPAREN);
+        CONSUME_AND_CHECK(t, TokenType::RPAREN);
         f = new Factor(e);
     } else if (unary_op() && fact()) {
         Factor* inner_factor = static_cast<Factor*>(get_and_pop());
         UnaryOperator* op = static_cast<UnaryOperator*>(get_and_pop());
         f = new Factor(op, inner_factor);
     } else {
-        return nullptr;
+        BACKTRACK
     }
     nodes.push(f);
 
+    tokens_used.pop();
     return f;
 }
 
 FunctionDeclaration* Parser::func_decl()
 {
     FunctionDeclaration* f  { nullptr };
+    Token t;
+    tokens_used.push(0);
 
-    consume_and_check(TokenType::INT);
-    std::string name = consume_and_check(TokenType::IDENTIFIER).value;
-    consume_and_check(TokenType::LPAREN);
+    CONSUME_AND_CHECK(t, TokenType::INT);
+    CONSUME_AND_CHECK(t, TokenType::IDENTIFIER);
+    std::string name = t.value;
+    CONSUME_AND_CHECK(t, TokenType::LPAREN);
     std::vector<std::pair<std::string, std::string>> parameters {};
     if (peek().type != TokenType::RPAREN) {
         while (true) {
-            consume_and_check(TokenType::INT);
+            CONSUME_AND_CHECK(t, TokenType::INT);
             if (peek().type == TokenType::IDENTIFIER) {
                 parameters.push_back(std::pair<std::string, std::string>("INT", peek().value));
                 consume();
@@ -328,40 +366,43 @@ FunctionDeclaration* Parser::func_decl()
             if (peek().type == TokenType::RPAREN) {
                 break;
             } else {
-                consume_and_check(TokenType::COMMA);
+                CONSUME_AND_CHECK(t, TokenType::COMMA);
             }
         }
     }
-    consume_and_check(TokenType::RPAREN);
+    CONSUME_AND_CHECK(t, TokenType::RPAREN);
     if (peek().type == TokenType::SEMICOLON) {
         consume();
         f = new FunctionDeclaration(name, parameters);
     } else {
         /* also a definition */
-        consume_and_check(TokenType::LBRACE);
+        CONSUME_AND_CHECK(t, TokenType::LBRACE);
         std::vector<BlockItem*> items {};
         while (peek().type != TokenType::RBRACE) {
             if (block_item()) {
                 BlockItem* b = static_cast<BlockItem*>(get_and_pop()); /* TODO: use `auto` */
                 items.push_back(b);
             } else {
-                return nullptr;
+                BACKTRACK
             }
         }
+        CONSUME_AND_CHECK(t, TokenType::RBRACE);
         f = new FunctionDeclaration(name, parameters, items);
-        consume_and_check(TokenType::RBRACE);
     }
     nodes.push(f);
 
+    tokens_used.pop();
     return f;
 }
 
 FunctionCall* Parser::func_call()
 {
     FunctionCall* f { nullptr };
+    Token t;
 
-    std::string id = consume_and_check(TokenType::IDENTIFIER).value;
-    consume_and_check(TokenType::LPAREN);
+    CONSUME_AND_CHECK(t, TokenType::IDENTIFIER);
+    std::string id = t.value;
+    CONSUME_AND_CHECK(t, TokenType::LPAREN);
     std::vector<Expression*> expressions {};
     if (peek().type != TokenType::RPAREN) {
             while (true) {
@@ -374,11 +415,11 @@ FunctionCall* Parser::func_call()
             if (peek().type == TokenType::RPAREN) {
                 break;
             } else {
-                consume_and_check(TokenType::COMMA);
+                CONSUME_AND_CHECK(t, TokenType::COMMA);
             }
         }
     }
-    consume_and_check(TokenType::RPAREN);
+    CONSUME_AND_CHECK(t, TokenType::RPAREN);
     f = new FunctionCall(id, expressions);
     nodes.push(f);
 
@@ -388,6 +429,7 @@ FunctionCall* Parser::func_call()
 RelationalExpression* Parser::rel_expr()
 {
     RelationalExpression* e { nullptr };
+    tokens_used.push(0);
 
     if (add_expr()) {
         e = new RelationalExpression(static_cast<AdditiveExpression*>(get_and_pop()));
@@ -400,27 +442,33 @@ RelationalExpression* Parser::rel_expr()
             t = peek();
         }
         nodes.push(e);
+    } else {
+        BACKTRACK
     }
 
+    tokens_used.pop();
     return e;
 }
 
 Statement* Parser::stm()
 {
     Statement* s { nullptr };
+    Token t;
+    tokens_used.push(0);
+
     if (peek().type == TokenType::RETURN) {
         consume();
         Expression* e = expr();
         nodes.pop();
+        CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         s = new Statement(e, true);
-        consume_and_check(TokenType::SEMICOLON);
     } else if (peek().type == TokenType::BREAK) {
         consume();
-        consume_and_check(TokenType::SEMICOLON);
+        CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         s = new Statement(Type::BREAK);
     } else if (peek().type == TokenType::CONTINUE) {
         consume();
-        consume_and_check(TokenType::SEMICOLON);
+        CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         s = new Statement(Type::CONTINUE);
     } else if (peek().type == TokenType::LBRACE) {
         consume();
@@ -433,14 +481,14 @@ Statement* Parser::stm()
                 return nullptr;
             }
         }
-        consume_and_check(TokenType::RBRACE);
+        CONSUME_AND_CHECK(t, TokenType::RBRACE);
         s = new Statement(block_items);
     } else if (peek().type == TokenType::IF) {
         consume();
-        consume_and_check(TokenType::LPAREN);
+        CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Expression* e = expr();
         nodes.pop();
-        consume_and_check(TokenType::RPAREN);
+        CONSUME_AND_CHECK(t, TokenType::RPAREN);
         Statement* if_stm = stm();
         nodes.pop();
         Statement* else_stm { nullptr };
@@ -452,7 +500,7 @@ Statement* Parser::stm()
         s = new Statement(e, if_stm, else_stm);
     } else if (peek().type == TokenType::FOR) {
         consume();
-        consume_and_check(TokenType::LPAREN);
+        CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Declaration* d { nullptr };
         Expression* e1 { nullptr };
         if (peek().type == TokenType::INT) { // TODO: Will have to change this, to any type or just call decl() and if it fails revert and check again
@@ -463,18 +511,18 @@ Statement* Parser::stm()
             if (e1) {
                 nodes.pop();
             }
-            consume_and_check(TokenType::SEMICOLON);
+            CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         }
         Expression* e2 = expr_optional();
         if (e2) {
             nodes.pop();
         }
-        consume_and_check(TokenType::SEMICOLON);
+        CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         Expression* e3 = expr_optional();
         if (e3) {
             nodes.pop();
         }
-        consume_and_check(TokenType::RPAREN);
+        CONSUME_AND_CHECK(t, TokenType::RPAREN);
         Statement* body = stm();
         nodes.pop();
 
@@ -484,10 +532,10 @@ Statement* Parser::stm()
             s = new Statement(e1, e2, e3, body);
     } else if (peek().type == TokenType::WHILE) {
         consume();
-        consume_and_check(TokenType::LPAREN);
+        CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Expression* e = expr();
         nodes.pop();
-        consume_and_check(TokenType::RPAREN);
+        CONSUME_AND_CHECK(t, TokenType::RPAREN);
         Statement* body = stm();
         nodes.pop();
         s = new Statement(Type::WHILE, e, body);
@@ -495,29 +543,31 @@ Statement* Parser::stm()
         consume();
         Statement* body = stm();
         nodes.pop();
-        consume_and_check(TokenType::WHILE);
-        consume_and_check(TokenType::LPAREN);
+        CONSUME_AND_CHECK(t, TokenType::WHILE);
+        CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Expression* e = expr();
         nodes.pop();
-        consume_and_check(TokenType::RPAREN);
-        consume_and_check(TokenType::SEMICOLON);
+        CONSUME_AND_CHECK(t, TokenType::RPAREN);
+        CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         s = new Statement(Type::DO, e, body);
     } else {
         Expression* e = expr_optional();
         if (e) {
             nodes.pop();
         }
+        CONSUME_AND_CHECK(t, TokenType::SEMICOLON);
         s = new Statement(e, false);
-        consume_and_check(TokenType::SEMICOLON);
     }
     nodes.push(s);
 
+    tokens_used.pop();
     return s;
 }
 
 Term* Parser::term()
 {
     Term* term { nullptr };
+    tokens_used.push(0);
 
     if (fact()) {
         term = new Term(static_cast<Factor*>(get_and_pop()));
@@ -530,14 +580,17 @@ Term* Parser::term()
             t = peek();
         }
         nodes.push(term);
+        tokens_used.pop();
+        return term;
+    } else {
+        BACKTRACK
     }
-
-    return term;
 }
 
 UnaryOperator* Parser::unary_op()
 {
     UnaryOperator* op { nullptr };
+    tokens_used.push(0);
 
     auto type = peek().type;
     if (type == TokenType::COMPLEMENT || type == TokenType::MINUS || type == TokenType::NEGATION) {
@@ -556,9 +609,9 @@ UnaryOperator* Parser::unary_op()
         op = new UnaryOperator(t, id);
         nodes.push(op);
     } else {
-        parse_error("Unary Operator");
-        return nullptr;
+        BACKTRACK
     }
 
+    tokens_used.pop();
     return op;
 }
