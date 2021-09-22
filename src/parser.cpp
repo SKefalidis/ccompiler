@@ -20,10 +20,28 @@ Token Parser::peek(int offset) const
 /* Like peek but also logs errors */
 bool Parser::expect(TokenType expected, int offset)
 {
-    bool result = expected == tokens.at(current_token + offset).type;
+    bool result = expected == peek(offset).type;
     if (result == false)
         errors.push_back(std::pair<std::string, int>(tokenTypeStrings.at(expected), current_token + offset));
     return result;
+}
+
+bool Parser::expect(std::vector<TokenType> expected, int offset)
+{
+    bool result = false;
+    for (auto& x : expected) {
+        if (x == peek(offset).type) {
+            return true;
+        }
+    }
+
+    std::string error {""};
+    for (auto& x : expected) {
+        error += tokenTypeStrings.at(x) + " ";
+    }
+    errors.push_back(std::pair<std::string, int>(error, current_token + offset));
+
+    return false;
 }
 
 Token Parser::consume()
@@ -118,7 +136,7 @@ AdditiveExpression* Parser::add_expr()
 
     if (term()) {
         e = new AdditiveExpression(static_cast<Term*>(get_and_pop()));
-        while (expect(TokenType::PLUS) || expect(TokenType::MINUS)) {
+        while (expect({TokenType::PLUS, TokenType::MINUS})) {
             Token op = consume();
             Term* next_term = term();
             nodes.pop();
@@ -165,7 +183,8 @@ BlockItem* Parser::block_item()
     } else if (stm()) {
         b = new BlockItem(static_cast<Statement*>(get_and_pop()));
     } else {
-        backtrack(); return nullptr;
+        backtrack();
+        return nullptr;
     }
     nodes.push(b);
 
@@ -229,7 +248,7 @@ EqualityExpression* Parser::eq_expr()
 
     if (rel_expr()) {
         e = new EqualityExpression(static_cast<RelationalExpression*>(get_and_pop()));
-        while (expect(TokenType::EQ) || expect(TokenType::NEQ)) {
+        while (expect({TokenType::EQ, TokenType::NEQ})) {
             Token op = consume();
             RelationalExpression* next_expr = rel_expr();
             nodes.pop();
@@ -251,12 +270,8 @@ Expression* Parser::expr()
 
     if (expect(TokenType::IDENTIFIER)) {
         std::string id = consume().value;
-        if (expect(TokenType::ASSIGN)
-            || expect(TokenType::PLUS_ASSIGN)
-            || expect(TokenType::MINUS_ASSIGN)
-            || expect(TokenType::MULT_ASSIGN)
-            || expect(TokenType::DIV_ASSIGN)
-            || expect(TokenType::MOD_ASSIGN)) {
+        if (expect({TokenType::ASSIGN, TokenType::PLUS_ASSIGN, TokenType::MINUS_ASSIGN,
+                   TokenType::MULT_ASSIGN, TokenType::DIV_ASSIGN, TokenType::MOD_ASSIGN})) {
             Token t = consume(); /* consume (x)-assign operator */
 
             /* get the operator if the operation is not a simple assignment */
@@ -307,7 +322,7 @@ Expression* Parser::expr_optional()
 {
     tokens_used.push(0);
 
-    if (expect(TokenType::SEMICOLON) || expect(TokenType::RPAREN)) {
+    if (expect({TokenType::SEMICOLON, TokenType::RPAREN})) {
         tokens_used.pop();
         return nullptr;
     } else if (Expression* e = expr()) {
@@ -471,7 +486,7 @@ RelationalExpression* Parser::rel_expr()
 
     if (add_expr()) {
         e = new RelationalExpression(static_cast<AdditiveExpression*>(get_and_pop()));
-        while (expect(TokenType::LT) || expect(TokenType::LE) || expect(TokenType::GT) || expect(TokenType::GE)) {
+        while (expect({TokenType::LT, TokenType::LE, TokenType::GT, TokenType::GE})) {
             Token op = consume();
             AdditiveExpression* next_expr = add_expr();
             nodes.pop();
@@ -631,11 +646,11 @@ UnaryOperator* Parser::unary_op()
     UnaryOperator* op { nullptr };
     tokens_used.push(0);
 
-    if (expect(TokenType::COMPLEMENT) || expect(TokenType::MINUS) || expect(TokenType::NEGATION)) {
+    if (expect({TokenType::COMPLEMENT, TokenType::MINUS, TokenType::NEGATION})) {
         Token t = consume();
         op = new UnaryOperator(t);
         nodes.push(op);
-    } else if (expect(TokenType::INCREMENT) || expect(TokenType::DECREMENT)) {
+    } else if (expect({TokenType::INCREMENT, TokenType::DECREMENT})) {
         Token t = consume();
         std::string id { "" };
         for (int i = 0; true; i++) {

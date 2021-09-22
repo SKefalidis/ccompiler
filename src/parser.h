@@ -34,6 +34,7 @@ public:
 private:
     Token peek(int offset = 0) const;
     bool expect(TokenType expected, int offset = 0);
+    bool expect(std::vector<TokenType> expected, int offset = 0);
     Token consume();
     void backtrack();
 
