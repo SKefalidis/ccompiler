@@ -503,8 +503,7 @@ Statement* Parser::stm()
         CONSUME_AND_CHECK(t, TokenType::LPAREN);
         Declaration* d { nullptr };
         Expression* e1 { nullptr };
-        if (peek().type == TokenType::INT) { // TODO: Will have to change this, to any type or just call decl() and if it fails revert and check again
-            d = decl();
+        if ((d = decl())) {
             nodes.pop();
         } else {
             e1 = expr_optional();
