@@ -37,8 +37,7 @@ private:
     bool expect(std::vector<TokenType> expected, int offset = 0);
     Token consume();
     void backtrack();
-
-    void* get_and_pop();
+    void backtrack(int i);
 
     void parse_error();
 
@@ -63,8 +62,6 @@ private:
     std::vector<Token> tokens   {};
     int current_token           { 0 };
     std::stack<int> tokens_used {};
-
-    std::stack<Node*> nodes     {};
 
     /* There are 2 kinds of error logged, peeking and consumption errors.
      * Consumption errors have a negative value and are prioritized.

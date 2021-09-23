@@ -102,5 +102,3 @@ vector<string> splitString(string s, char delimiter)
 
     return strings;
 }
-
-

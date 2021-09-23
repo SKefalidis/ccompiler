@@ -83,7 +83,7 @@ void FunctionDeclarationVisitor::visit(Expression* expr)
 {
     if (expr->cond_expr) {
         expr->cond_expr->accept(this);
-    } else { /* assignment operation */
+    } else if (!expr->id.empty()) { /* assignment operation */
         expr->expr->accept(this);
     }
 }

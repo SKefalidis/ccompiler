@@ -4,10 +4,10 @@
 Statement::Statement(Expression* expr, bool ret)
     : expr(expr), Node(NodeType::STATEMENT)
 {
-    if (expr)
-        stm_type = ret ? Type::RETURN : Type::OTHER;
+    if (!expr->cond_expr && !expr->expr && expr->id.empty() && expr->op.type == TokenType::INVALID)
+        stm_type = Type::EMPTY;
     else
-        stm_type = ret ? Type::RETURN : Type::EMPTY;
+        stm_type = ret ? Type::RETURN : Type::OTHER;
 }
 
 Statement::Statement(Expression* expr, Statement* if_stm, Statement* else_stm)

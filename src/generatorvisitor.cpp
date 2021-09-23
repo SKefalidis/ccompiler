@@ -130,7 +130,7 @@ void GeneratorVisitor::visit(Expression* expr)
 {
     if (expr->cond_expr) {
         expr->cond_expr->accept(this);
-    } else { /* assignment operation */
+    } else if (!expr->id.empty()) { /* assignment operation */
         expr->expr->accept(this);
         switch (expr->op.type) {
         case TokenType::PLUS:
@@ -423,6 +423,7 @@ void GeneratorVisitor::visit(Statement* stm)
             print_instr("cmpl", "$0", "%eax");
             print_instr("je", end_label);
         }
+        print_line("# body");
         stm->body->accept(this);
         print_line("# e3");
         output << continue_label << ":" << std::endl;
