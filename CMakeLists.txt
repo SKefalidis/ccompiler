@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_executable(ccompiler
+    README.md
     src/main.cpp
     src/lexer.h src/lexer.cpp
     src/token.h src/token.cpp
