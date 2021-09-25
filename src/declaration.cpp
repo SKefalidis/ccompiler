@@ -1,7 +1,7 @@
 #include "declaration.h"
 
-Declaration::Declaration(std::string id, Expression* expr)
-    : id(id), expr(expr), Node(NodeType::DECLARATION)
+Declaration::Declaration(std::string id, Type* type, Expression* expr)
+    : id(id), type(type), expr(expr), Node(NodeType::DECLARATION)
 {
     ;
 }

@@ -7,7 +7,7 @@
 #include "expression.h"
 #include "visitor.h"
 
-enum class Type {
+enum class StatementType {
     FOR,
     WHILE,
     DO,
@@ -23,30 +23,33 @@ class Statement : public Node
 {
 public:
     Statement(Expression* expr, bool ret);
+    Statement(ExpressionOptional* expr);
     Statement(Expression* expr, Statement* if_stm, Statement* else_stm);
     Statement(std::vector<BlockItem*> block_items);
 
-    Statement(Expression* e1, Expression* e2, Expression* e3, Statement* body);
-    Statement(Declaration* d, Expression* e2, Expression* e3, Statement* body);
-    Statement(Type type, Expression* e1, Statement* body);
+    Statement(ExpressionOptional* fe1, ExpressionOptional* fe2, ExpressionOptional* fe3, Statement* body);
+    Statement(Declaration* d, ExpressionOptional* fe2, ExpressionOptional* fe3, Statement* body);
+    Statement(StatementType type, Expression* we, Statement* body);
 
-    Statement(Type type);
+    Statement(StatementType type);
 
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    Type stm_type   { Type::OTHER };
+    StatementType stm_type              { StatementType::OTHER };
 
     Expression* expr                    { nullptr };
+    ExpressionOptional* expr_optional   { nullptr };
     Statement* if_stm                   { nullptr };
     Statement* else_stm                 { nullptr };
     std::vector<BlockItem*> block_items {};
 
-    Declaration* d  { nullptr };
-    Expression* e1  { nullptr };
-    Expression* e2  { nullptr };
-    Expression* e3  { nullptr };
-    Statement* body { nullptr };
+    Declaration* d              { nullptr };
+    ExpressionOptional* fe1     { nullptr };
+    ExpressionOptional* fe2     { nullptr };
+    ExpressionOptional* fe3     { nullptr };
+    Expression*         we      { nullptr };
+    Statement*          body    { nullptr };
 };
 
 #endif // STATEMENT_H

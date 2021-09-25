@@ -29,7 +29,9 @@ add_executable(ccompiler
     src/andexpression.h src/andexpression.cpp
     src/orexpression.h src/orexpression.cpp
     src/expression.h src/expression.cpp
+    src/expressionoptional.h src/expressionoptional.cpp
     src/blockitem.h src/blockitem.cpp
     src/declaration.h src/declaration.cpp
     src/condexpression.h src/condexpression.cpp
+    src/type.h src/type.cpp
     )

@@ -5,9 +5,15 @@ Statement::Statement(Expression* expr, bool ret)
     : expr(expr), Node(NodeType::STATEMENT)
 {
     if (!expr->cond_expr && !expr->expr && expr->id.empty() && expr->op.type == TokenType::INVALID)
-        stm_type = Type::EMPTY;
+        stm_type = StatementType::EMPTY;
     else
-        stm_type = ret ? Type::RETURN : Type::OTHER;
+        stm_type = ret ? StatementType::RETURN : StatementType::OTHER;
+}
+
+Statement::Statement(ExpressionOptional* expr)
+    : expr_optional(expr), Node(NodeType::STATEMENT)
+{
+    ;
 }
 
 Statement::Statement(Expression* expr, Statement* if_stm, Statement* else_stm)
@@ -22,25 +28,25 @@ Statement::Statement(std::vector<BlockItem*> block_items)
     ;
 }
 
-Statement::Statement(Expression* e1, Expression* e2, Expression* e3, Statement* body)
-    : e1(e1), e2(e2), e3(e3), body(body), Node(NodeType::STATEMENT)
+Statement::Statement(ExpressionOptional* fe1, ExpressionOptional* fe2, ExpressionOptional* fe3, Statement* body)
+    : fe1(fe1), fe2(fe2), fe3(fe3), body(body), Node(NodeType::STATEMENT)
 {
-    stm_type = Type::FOR;
+    stm_type = StatementType::FOR;
 }
 
-Statement::Statement(Declaration* d, Expression* e2, Expression* e3, Statement* body)
-    : d(d), e2(e2), e3(e3), body(body), Node(NodeType::STATEMENT)
+Statement::Statement(Declaration* d, ExpressionOptional* fe2, ExpressionOptional* fe3, Statement* body)
+    : d(d), fe2(fe2), fe3(fe3), body(body), Node(NodeType::STATEMENT)
 {
-    stm_type = Type::FOR;
+    stm_type = StatementType::FOR;
 }
 
-Statement::Statement(Type type, Expression* e1, Statement* body)
-    : stm_type(type), e1(e1), body(body), Node(NodeType::STATEMENT)
+Statement::Statement(StatementType type, Expression* we, Statement* body)
+    : stm_type(type), we(we), body(body), Node(NodeType::STATEMENT)
 {
     ;
 }
 
-Statement::Statement(Type type)
+Statement::Statement(StatementType type)
     : stm_type(type), Node(NodeType::STATEMENT)
 {
     ;
@@ -54,7 +60,7 @@ void Statement::accept(Visitor* v)
 void Statement::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "STATEMENT" << std::endl;
-    if (stm_type == Type::RETURN)
+    if (stm_type == StatementType::RETURN)
         std::cout << tabs_string(tabs) << "return" << std::endl;
     else
         std::cout << tabs_string(tabs) << "other" << std::endl;

@@ -10,14 +10,16 @@ Current additional features include:
 ```
 <program>           ::= { <function> | <declaration> }
 
-<function>          ::= "int" <id> "(" [ "int" <id> { "," "int" <id> } ] ")" ( "{" { <block-item> } "}" | ";" )
+<function>          ::= <type> <id> "(" [ <type> <id> { "," <type> <id> } ] ")" ( "{" { <block-item> } "}" | ";" )
 
 <function-call>     ::= id "(" [ <exp> { "," <exp> } ] ")"
+
+<type>              ::= "int"
 
 <block-item>        ::= <statement>
                     |   <declaration>
 
-<declaration>       ::= "int" <id> [ = <exp> ] ";"
+<declaration>       ::= <type> <id> [ = <exp> ] ";"
 
 <statement>         ::= "return" <exp> ";"
                     |   <exp-option> ";"
@@ -31,7 +33,7 @@ Current additional features include:
                     |   "continue" ";"
 
 <exp-option>        ::= <exp>
-                    |   ""
+                    |   ε
 
 <exp>               ::= <id> "=" <exp>
                     |   <conditional-exp>

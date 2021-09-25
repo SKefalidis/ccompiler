@@ -19,6 +19,7 @@ public:
     void visit(Declaration*             decl)  override;
     void visit(EqualityExpression*      expr)  override;
     void visit(Expression*              expr)  override;
+    void visit(ExpressionOptional*      expr)  override;
     void visit(OrExpression*            expr)  override;
     void visit(Factor*                  fact)  override;
     void visit(FunctionDeclaration*     func)  override;

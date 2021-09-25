@@ -12,6 +12,7 @@ void Goal::accept(Visitor* v)
     v->visit(this);
 }
 
+// TODO: Update print_node
 void Goal::print_node(int tabs) const
 {
     std::cout << tabs_string(tabs) << "GOAL" << std::endl;

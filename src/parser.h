@@ -14,6 +14,7 @@
 #include "declaration.h"
 #include "equalityexpression.h"
 #include "expression.h"
+#include "expressionoptional.h"
 #include "orexpression.h"
 #include "factor.h"
 #include "functiondeclaration.h"
@@ -22,6 +23,7 @@
 #include "relationalexpression.h"
 #include "statement.h"
 #include "term.h"
+#include "type.h"
 #include "unaryoperator.h"
 
 
@@ -49,7 +51,7 @@ private:
     Declaration*            decl();
     EqualityExpression*     eq_expr();
     Expression*             expr();
-    Expression*             expr_optional();
+    ExpressionOptional*     expr_optional();
     OrExpression*           or_expr();
     Factor*                 fact();
     FunctionDeclaration*    func_decl();
@@ -57,6 +59,7 @@ private:
     RelationalExpression*   rel_expr();
     Statement*              stm();
     Term*                   term();
+    Type*                   type();
     UnaryOperator*          unary_op();
 
     std::vector<Token> tokens   {};

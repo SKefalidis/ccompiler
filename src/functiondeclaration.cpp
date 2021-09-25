@@ -3,14 +3,14 @@
 #include "blockitem.h"
 
 
-FunctionDeclaration::FunctionDeclaration(std::string name, std::vector<std::pair<std::string, std::string>> parameters)
-    : name(name), parameters(parameters), Node(NodeType::FUNCTION_DECLARATION)
+FunctionDeclaration::FunctionDeclaration(std::string name, Type* return_type, std::vector<std::pair<Type*, std::string> > parameters)
+    : name(name), return_type(return_type), parameters(parameters), Node(NodeType::FUNCTION_DECLARATION)
 {
     definition = false;
 }
 
-FunctionDeclaration::FunctionDeclaration(std::string name, std::vector<std::pair<std::string, std::string>> parameters, std::vector<BlockItem*> items)
-    : name(name), parameters(parameters), items(items), Node(NodeType::FUNCTION_DECLARATION)
+FunctionDeclaration::FunctionDeclaration(std::string name, Type* return_type, std::vector<std::pair<Type*, std::string> > parameters, std::vector<BlockItem*> items)
+    : name(name), return_type(return_type), parameters(parameters), items(items), Node(NodeType::FUNCTION_DECLARATION)
 {
     definition = true;
 }

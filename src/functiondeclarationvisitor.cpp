@@ -9,6 +9,7 @@
 #include "functiondeclaration.h"
 #include "goal.h"
 #include "andexpression.h"
+#include "expressionoptional.h"
 #include "equalityexpression.h"
 #include "relationalexpression.h"
 #include "statement.h"
@@ -84,6 +85,13 @@ void FunctionDeclarationVisitor::visit(Expression* expr)
     if (expr->cond_expr) {
         expr->cond_expr->accept(this);
     } else if (!expr->id.empty()) { /* assignment operation */
+        expr->expr->accept(this);
+    }
+}
+
+void FunctionDeclarationVisitor::visit(ExpressionOptional* expr)
+{
+    if (expr->expr) {
         expr->expr->accept(this);
     }
 }
@@ -213,32 +221,32 @@ void FunctionDeclarationVisitor::visit(Statement* stm)
         for (auto& i : stm->block_items) {
             i->accept(this);
         }
-    } else if (stm->stm_type == Type::RETURN) { /* return statement */
+    } else if (stm->stm_type == StatementType::RETURN) { /* return statement */
         stm->expr->accept(this);
-    } else if (stm->stm_type == Type::EMPTY) { /* empty statement */
+    } else if (stm->stm_type == StatementType::EMPTY) { /* empty statement */
         ;
-    } else if (stm->stm_type == Type::BREAK) { /* empty statement */
+    } else if (stm->stm_type == StatementType::BREAK) { /* empty statement */
         ;
-    } else if (stm->stm_type == Type::CONTINUE) { /* empty statement */
+    } else if (stm->stm_type == StatementType::CONTINUE) { /* empty statement */
         ;
-    } else if (stm->stm_type == Type::WHILE) { /* while statement */
-        stm->e1->accept(this);
+    } else if (stm->stm_type == StatementType::WHILE) { /* while statement */
+        stm->we->accept(this);
         stm->body->accept(this);
-    } else if (stm->stm_type == Type::DO) { /* do statement */
+    } else if (stm->stm_type == StatementType::DO) { /* do statement */
         stm->body->accept(this);
-        stm->e1->accept(this);
-    } else if (stm->stm_type == Type::FOR) { /* for statement */
+        stm->we->accept(this);
+    } else if (stm->stm_type == StatementType::FOR) { /* for statement */
         if (stm->d) {
             stm->d->accept(this);
-        } else if (stm->e1) {
-            stm->e1->accept(this);
+        } else if (stm->fe1) {
+            stm->fe1->accept(this);
         }
-        if (stm->e2) {
-            stm->e2->accept(this);
+        if (stm->fe2) {
+            stm->fe2->accept(this);
         }
         stm->body->accept(this);
-        if (stm->e3) {
-            stm->e3->accept(this);
+        if (stm->fe3) {
+            stm->fe3->accept(this);
         }
     } else if (stm->expr && stm->if_stm) { /* if statement */
         stm->expr->accept(this);

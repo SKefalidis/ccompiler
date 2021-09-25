@@ -4,6 +4,7 @@
 #include "additiveexpression.h"
 #include "blockitem.h"
 #include "condexpression.h"
+#include "expressionoptional.h"
 #include "declaration.h"
 #include "functiondeclaration.h"
 #include "goal.h"
@@ -170,6 +171,13 @@ void GeneratorVisitor::visit(Expression* expr)
         }
         /* make sure that %eax has the correct value in case it is used */
         print_instr("movl", get_variable_address(expr->id), "%eax");
+    }
+}
+
+void GeneratorVisitor::visit(ExpressionOptional* expr)
+{
+    if (expr->expr) {
+        expr->expr->accept(this);
     }
 }
 
@@ -351,31 +359,31 @@ void GeneratorVisitor::visit(Statement* stm)
         }
         stack_index += variable_map.front().size() * 4;
         variable_map.pop_front();
-    } else if (stm->stm_type == Type::RETURN) { /* return statement */
+    } else if (stm->stm_type == StatementType::RETURN) { /* return statement */
         stm->expr->accept(this);
         print_instr("movl", "%ebp", "%esp");
         print_instr("pop", "%ebp");
         print_instr("ret");
-    } else if (stm->stm_type == Type::EMPTY) { /* empty statement */
+    } else if (stm->stm_type == StatementType::EMPTY) { /* empty statement */
         ;
-    } else if (stm->stm_type == Type::BREAK) { /* empty statement */
+    } else if (stm->stm_type == StatementType::BREAK) { /* empty statement */
         if (break_label.empty()) {
             throw "Illegal break statement";
         }
         print_instr("jmp", break_label);
-    } else if (stm->stm_type == Type::CONTINUE) { /* empty statement */
+    } else if (stm->stm_type == StatementType::CONTINUE) { /* empty statement */
         if (continue_label.empty()) {
             throw "Illegal continue statement";
         }
         print_instr("jmp", continue_label);
-    } else if (stm->stm_type == Type::WHILE) { /* while statement */
+    } else if (stm->stm_type == StatementType::WHILE) { /* while statement */
         std::string start_label = get_label();
         std::string end_label = get_label();
         continue_label = start_label;
         break_label = end_label;
 
         output << start_label << ":" << std::endl;
-        stm->e1->accept(this);
+        stm->we->accept(this);
         print_instr("cmpl", "$0", "%eax");
         print_instr("je", end_label);
         stm->body->accept(this);
@@ -384,7 +392,7 @@ void GeneratorVisitor::visit(Statement* stm)
 
         break_label = "";
         continue_label = "";
-    } else if (stm->stm_type == Type::DO) { /* do statement */
+    } else if (stm->stm_type == StatementType::DO) { /* do statement */
         std::string start_label = get_label();
         std::string end_label = get_label();
         continue_label = start_label;
@@ -392,7 +400,7 @@ void GeneratorVisitor::visit(Statement* stm)
 
         output << start_label << ":" << std::endl;
         stm->body->accept(this);
-        stm->e1->accept(this);
+        stm->we->accept(this);
         print_instr("cmpl", "$0", "%eax");
         print_instr("je", end_label);
         print_instr("jmp", start_label);
@@ -400,7 +408,7 @@ void GeneratorVisitor::visit(Statement* stm)
 
         break_label = "";
         continue_label = "";
-    } else if (stm->stm_type == Type::FOR) { /* for statement */
+    } else if (stm->stm_type == StatementType::FOR) { /* for statement */
         std::string start_label = get_label();
         std::string end_label = get_label();
         std::string continue_label = get_label();
@@ -412,14 +420,14 @@ void GeneratorVisitor::visit(Statement* stm)
         if (stm->d) {
             variable_map.push_front(std::unordered_map<std::string, VariableInfo>());
             stm->d->accept(this);
-        } else if (stm->e1) {
-            stm->e1->accept(this);
+        } else if (stm->fe1) {
+            stm->fe1->accept(this);
         }
 
         output << start_label << ":" << std::endl;
         print_line("# e2");
-        if (stm->e2) {
-            stm->e2->accept(this);
+        if (stm->fe2->is_empty()) { /* if the optional expression is empty do not check the condition */
+            stm->fe2->accept(this);
             print_instr("cmpl", "$0", "%eax");
             print_instr("je", end_label);
         }
@@ -427,8 +435,8 @@ void GeneratorVisitor::visit(Statement* stm)
         stm->body->accept(this);
         print_line("# e3");
         output << continue_label << ":" << std::endl;
-        if (stm->e3) {
-            stm->e3->accept(this);
+        if (stm->fe3) {
+            stm->fe3->accept(this);
         }
         print_instr("jmp", start_label);
         output << end_label << ":" << std::endl;
@@ -456,8 +464,8 @@ void GeneratorVisitor::visit(Statement* stm)
             stm->if_stm->accept(this);
         }
         output << end_label << ":" << std::endl;
-    } else if (stm->expr) { /* exp; */
-        stm->expr->accept(this);
+    } else if (stm->expr_optional) { /* exp; */
+        stm->expr_optional->accept(this);
     }
 }
 
