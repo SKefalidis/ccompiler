@@ -230,23 +230,23 @@ void FunctionDeclarationVisitor::visit(Statement* stm)
     } else if (stm->stm_type == StatementType::CONTINUE) { /* empty statement */
         ;
     } else if (stm->stm_type == StatementType::WHILE) { /* while statement */
-        stm->we->accept(this);
+        stm->while_e->accept(this);
         stm->body->accept(this);
     } else if (stm->stm_type == StatementType::DO) { /* do statement */
         stm->body->accept(this);
-        stm->we->accept(this);
+        stm->while_e->accept(this);
     } else if (stm->stm_type == StatementType::FOR) { /* for statement */
         if (stm->d) {
             stm->d->accept(this);
-        } else if (stm->fe1) {
-            stm->fe1->accept(this);
+        } else if (stm->for_e1) {
+            stm->for_e1->accept(this);
         }
-        if (stm->fe2) {
-            stm->fe2->accept(this);
+        if (stm->for_e2) {
+            stm->for_e2->accept(this);
         }
         stm->body->accept(this);
-        if (stm->fe3) {
-            stm->fe3->accept(this);
+        if (stm->for_e3) {
+            stm->for_e3->accept(this);
         }
     } else if (stm->expr && stm->if_stm) { /* if statement */
         stm->expr->accept(this);
@@ -256,8 +256,8 @@ void FunctionDeclarationVisitor::visit(Statement* stm)
         } else {
             stm->if_stm->accept(this);
         }
-    } else if (stm->expr) { /* exp; */
-        stm->expr->accept(this);
+    } else if (stm->expr_optional) { /* exp; */
+        stm->expr_optional->accept(this);
     }
 }
 

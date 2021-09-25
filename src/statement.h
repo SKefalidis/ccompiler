@@ -36,20 +36,21 @@ public:
     void accept(Visitor* v) override;
     void print_node(int tabs) const override;
 
-    StatementType stm_type              { StatementType::OTHER };
+    StatementType       stm_type        { StatementType::OTHER };
 
-    Expression* expr                    { nullptr };
-    ExpressionOptional* expr_optional   { nullptr };
-    Statement* if_stm                   { nullptr };
-    Statement* else_stm                 { nullptr };
+    Expression*         expr            { nullptr }; /* used by return statements and as the condition in if statements */
+    ExpressionOptional* expr_optional   { nullptr }; /* used for normal statements */
+
+    Declaration*        d               { nullptr };
+    ExpressionOptional* for_e1          { nullptr };
+    ExpressionOptional* for_e2          { nullptr };
+    ExpressionOptional* for_e3          { nullptr };
+    Expression*         while_e         { nullptr }; /* used as the condition in while and do loops */
+
     std::vector<BlockItem*> block_items {};
-
-    Declaration* d              { nullptr };
-    ExpressionOptional* fe1     { nullptr };
-    ExpressionOptional* fe2     { nullptr };
-    ExpressionOptional* fe3     { nullptr };
-    Expression*         we      { nullptr };
-    Statement*          body    { nullptr };
+    Statement*          body            { nullptr };
+    Statement*          if_stm          { nullptr };
+    Statement*          else_stm        { nullptr };
 };
 
 #endif // STATEMENT_H

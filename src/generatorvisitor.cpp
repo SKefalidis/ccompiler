@@ -383,7 +383,7 @@ void GeneratorVisitor::visit(Statement* stm)
         break_label = end_label;
 
         output << start_label << ":" << std::endl;
-        stm->we->accept(this);
+        stm->while_e->accept(this);
         print_instr("cmpl", "$0", "%eax");
         print_instr("je", end_label);
         stm->body->accept(this);
@@ -400,7 +400,7 @@ void GeneratorVisitor::visit(Statement* stm)
 
         output << start_label << ":" << std::endl;
         stm->body->accept(this);
-        stm->we->accept(this);
+        stm->while_e->accept(this);
         print_instr("cmpl", "$0", "%eax");
         print_instr("je", end_label);
         print_instr("jmp", start_label);
@@ -420,14 +420,14 @@ void GeneratorVisitor::visit(Statement* stm)
         if (stm->d) {
             variable_map.push_front(std::unordered_map<std::string, VariableInfo>());
             stm->d->accept(this);
-        } else if (stm->fe1) {
-            stm->fe1->accept(this);
+        } else if (stm->for_e1) {
+            stm->for_e1->accept(this);
         }
 
         output << start_label << ":" << std::endl;
         print_line("# e2");
-        if (stm->fe2->is_empty()) { /* if the optional expression is empty do not check the condition */
-            stm->fe2->accept(this);
+        if (stm->for_e2->is_empty()) { /* if the optional expression is empty do not check the condition */
+            stm->for_e2->accept(this);
             print_instr("cmpl", "$0", "%eax");
             print_instr("je", end_label);
         }
@@ -435,8 +435,8 @@ void GeneratorVisitor::visit(Statement* stm)
         stm->body->accept(this);
         print_line("# e3");
         output << continue_label << ":" << std::endl;
-        if (stm->fe3) {
-            stm->fe3->accept(this);
+        if (stm->for_e3) {
+            stm->for_e3->accept(this);
         }
         print_instr("jmp", start_label);
         output << end_label << ":" << std::endl;

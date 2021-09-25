@@ -29,19 +29,19 @@ Statement::Statement(std::vector<BlockItem*> block_items)
 }
 
 Statement::Statement(ExpressionOptional* fe1, ExpressionOptional* fe2, ExpressionOptional* fe3, Statement* body)
-    : fe1(fe1), fe2(fe2), fe3(fe3), body(body), Node(NodeType::STATEMENT)
+    : for_e1(fe1), for_e2(fe2), for_e3(fe3), body(body), Node(NodeType::STATEMENT)
 {
     stm_type = StatementType::FOR;
 }
 
 Statement::Statement(Declaration* d, ExpressionOptional* fe2, ExpressionOptional* fe3, Statement* body)
-    : d(d), fe2(fe2), fe3(fe3), body(body), Node(NodeType::STATEMENT)
+    : d(d), for_e2(fe2), for_e3(fe3), body(body), Node(NodeType::STATEMENT)
 {
     stm_type = StatementType::FOR;
 }
 
 Statement::Statement(StatementType type, Expression* we, Statement* body)
-    : stm_type(type), we(we), body(body), Node(NodeType::STATEMENT)
+    : stm_type(type), while_e(we), body(body), Node(NodeType::STATEMENT)
 {
     ;
 }
