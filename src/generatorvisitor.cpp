@@ -426,7 +426,7 @@ void GeneratorVisitor::visit(Statement* stm)
 
         output << start_label << ":" << std::endl;
         print_line("# e2");
-        if (stm->for_e2->is_empty()) { /* if the optional expression is empty do not check the condition */
+        if (!stm->for_e2->is_empty()) { /* if the optional expression is empty do not check the condition */
             stm->for_e2->accept(this);
             print_instr("cmpl", "$0", "%eax");
             print_instr("je", end_label);
