@@ -9,6 +9,8 @@
 #include "parser.h"
 #include "generatorvisitor.h"
 #include "functiondeclarationvisitor.h"
+#include "blockgenerator.h"
+#include "peepholeoptimizer.h"
 #include "node.h"
 
 using namespace std;
@@ -43,9 +45,42 @@ int main(int argc, char** argv)
     fvisitor.visit(g);
     generate(g);
 
+    /* optimize */
+    input.close();
+    input.open("./assembly.s");
+    BlockGenerator blocker(input);
+    PeepholeOptimizer peeophole_optimizer;
+    auto blocks = peeophole_optimizer.optimize(blocker.get_blocks());
+    input.close();
+
+//    std::cout << "Optimized" << std::endl;
+//    for (auto& b : blocks) {
+//        if (!b->is_code_block()) {
+//            continue;
+//        }
+//        std::cout << "Basic Block:" << std::endl;
+//        for (auto& i : b->instructions) {
+//            std::cout << i->to_string() << std::endl;
+//        }
+//    }
+
+    /* write optimized assembly file */
+    ofstream output;
+    output.open("optimized_assembly.s");
+    for (auto& b : blocks) {
+        for (auto& l : b->lines) {
+            output << l << std::endl;
+        }
+        for (auto& i : b->instructions) {
+            output << i->to_string() << std::endl;
+        }
+    }
+    output.close();
+
+    /* create executable from x86 assembly */
     pid_t pid = fork();
     if (pid == 0) {
-        int i = execl("/usr/bin/gcc", "gcc", "-m32", "./assembly.s", "-o", filename.c_str(), NULL);
+        int i = execl("/usr/bin/gcc", "gcc", "-m32", "./optimized_assembly.s", "-o", filename.c_str(), NULL);
         if (i) {
             std::cout << errno << std::endl;
         }

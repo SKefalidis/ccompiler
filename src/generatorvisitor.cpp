@@ -570,7 +570,7 @@ void GeneratorVisitor::print_line(std::string line)
 
 void GeneratorVisitor::print_instr(std::string instruction)
 {
-    print_line(instruction);
+    print_line("\t" + instruction);
 }
 
 void GeneratorVisitor::print_instr(std::string instruction, std::string arg1)

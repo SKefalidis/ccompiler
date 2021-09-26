@@ -11,6 +11,10 @@ add_executable(ccompiler
     src/lexer.h src/lexer.cpp
     src/token.h src/token.cpp
     src/parser.h src/parser.cpp
+    src/blockgenerator.h src/blockgenerator.cpp
+    src/basicblock.h src/basicblock.cpp
+    src/instruction.h src/instruction.cpp
+    src/peepholeoptimizer.h src/peepholeoptimizer.cpp
     src/goal.h src/goal.cpp
     src/functiondeclaration.h src/functiondeclaration.cpp
     src/functioncall.h src/functioncall.cpp
