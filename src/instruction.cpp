@@ -33,6 +33,11 @@ bool Instruction::is_guaranteed_jump()
     return instruction == "jmp" || instruction == "ret";
 }
 
+bool Instruction::is_move()
+{
+    return instruction == "mov" || instruction == "movl";
+}
+
 void Instruction::replace(std::string instr, std::string a1, std::string a2)
 {
     instruction = instr;

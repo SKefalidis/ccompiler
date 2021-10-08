@@ -1,5 +1,8 @@
 #include "peepholeoptimizer.h"
 #include <algorithm>
+#include <iostream>
+
+
 
 PeepholeOptimizer::PeepholeOptimizer()
 {
@@ -8,7 +11,8 @@ PeepholeOptimizer::PeepholeOptimizer()
 
 std::vector<BasicBlock*> PeepholeOptimizer::optimize(std::vector<BasicBlock*> blocks)
 {
-    bool ends_with_return { false };
+    bool ends_with_return   { false };
+    bool no_change          { true };
 
     for (int bi = 0; bi < blocks.size(); bi++) {
         auto b = blocks.at(bi);
@@ -23,6 +27,7 @@ std::vector<BasicBlock*> PeepholeOptimizer::optimize(std::vector<BasicBlock*> bl
                 blocks.erase(blocks.begin() + bi);
                 bi--;
                 delete b;
+                no_change = false;
                 continue;
             }
         }
@@ -31,21 +36,29 @@ std::vector<BasicBlock*> PeepholeOptimizer::optimize(std::vector<BasicBlock*> bl
             Instruction* instrA = b->instructions.at(i);
 
             /* redundant load/store store/load */
-            if (instrA->instruction == "movl") {
+            if (instrA->is_move()) {
                 if (i + 1 < b->instructions.size()) {
                     Instruction* instrB = b->instructions.at(i + 1);
-                    if (instrB->instruction == "movl") {
+                    if (instrB->is_move()) {
                         if (instrA->a1 == instrB->a2 && instrA->a2 == instrB->a1) {
                             b->instructions.erase(b->instructions.begin() + i + 1);
                             i--;
                             delete instrB;
+                            no_change = false;
                             continue;
                         }
                     }
                 }
             }
 
-            /* redundant push/pop */
+            /* redundant push/pop
+             * push 	%eax
+             * movl 	$1, %eax
+             * ...
+             * not using %ecx
+             * ...
+             * pop  	%ecx
+            */
             if (instrA->instruction == "push" || instrA->instruction == "pushl") {
                 Instruction* instrB { nullptr };
                 int j;
@@ -77,11 +90,48 @@ std::vector<BasicBlock*> PeepholeOptimizer::optimize(std::vector<BasicBlock*> bl
                         b->instructions.erase(b->instructions.begin() + j);
                         i--;
                         delete instrB;
+                        no_change = false;
+                        continue;
+                    }
+                }
+            }
+
+            /* redundant push/pop
+             * 	push 	%eax
+             *  movl 	$2, %eax
+             *  movl 	%eax, %ecx
+             *  pop 	%eax
+             */
+            if (instrA->instruction == "push" || instrA->instruction == "pushl") {
+                if (i + 3 < b->instructions.size()) {
+                    auto instrB = b->instructions.at(i + 1);
+                    auto instrC = b->instructions.at(i + 2);
+                    auto instrD = b->instructions.at(i + 3);
+
+                    if (instrB->is_move() && instrB->a2 == instrA->a1
+                    && instrC->is_move() && instrC->a1 == instrA->a1
+                    && instrD->instruction == "pop" && instrC->a1 == instrA->a1) {
+                        instrA->replace(instrB->instruction, instrB->a1, instrC->a2);
+
+                        b->instructions.erase(b->instructions.begin() + i + 1);
+                        b->instructions.erase(b->instructions.begin() + i + 1);
+                        b->instructions.erase(b->instructions.begin() + i + 1);
+                        delete instrB;
+                        delete instrC;
+                        delete instrD;
+
+                        i--;
+                        no_change = false;
                         continue;
                     }
                 }
             }
         }
+    }
+
+    if (!no_change) {
+        std::cout << "Optimize again" << std::endl;
+        return optimize(blocks);
     }
 
     return blocks;
