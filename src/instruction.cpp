@@ -27,3 +27,15 @@ bool Instruction::is_jump()
 {
     return instruction == "jmp" || instruction == "jne" || instruction == "je" || instruction == "ret";
 }
+
+bool Instruction::is_guaranteed_jump()
+{
+    return instruction == "jmp" || instruction == "ret";
+}
+
+void Instruction::replace(std::string instr, std::string a1, std::string a2)
+{
+    instruction = instr;
+    this->a1 = a1;
+    this->a2 = a2;
+}
