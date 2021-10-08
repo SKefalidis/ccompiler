@@ -47,6 +47,7 @@ public:
 
 private:
     std::string get_label();
+    std::string get_global_label();
     VariableInfo get_variable_info(std::string var_name);
     std::string get_variable_address(std::string id);
     void print_line(std::string line);

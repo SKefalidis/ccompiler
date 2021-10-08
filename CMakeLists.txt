@@ -15,6 +15,7 @@ add_executable(ccompiler
     src/basicblock.h src/basicblock.cpp
     src/instruction.h src/instruction.cpp
     src/peepholeoptimizer.h src/peepholeoptimizer.cpp
+    src/controlflowgraph.h src/controlflowgraph.cpp
     src/goal.h src/goal.cpp
     src/functiondeclaration.h src/functiondeclaration.cpp
     src/functioncall.h src/functioncall.cpp

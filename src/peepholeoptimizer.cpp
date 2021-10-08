@@ -6,7 +6,7 @@
 
 PeepholeOptimizer::PeepholeOptimizer()
 {
-
+    ;
 }
 
 std::vector<BasicBlock*> PeepholeOptimizer::optimize(std::vector<BasicBlock*> blocks)
@@ -130,7 +130,7 @@ std::vector<BasicBlock*> PeepholeOptimizer::optimize(std::vector<BasicBlock*> bl
     }
 
     if (!no_change) {
-        std::cout << "Optimize again" << std::endl;
+//        std::cout << "Optimize again" << std::endl;
         return optimize(blocks);
     }
 

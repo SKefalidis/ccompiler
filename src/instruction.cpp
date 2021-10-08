@@ -20,7 +20,7 @@ std::string Instruction::to_string()
 
 bool Instruction::is_label()
 {
-    return instruction.back()  == ':';
+    return instruction.back()  == ':' && instruction.at(1) != 'g';
 }
 
 bool Instruction::is_jump()

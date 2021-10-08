@@ -280,7 +280,7 @@ void GeneratorVisitor::visit(Goal* goal)
             if (variable_map.front().find(decl->id) != variable_map.front().end()) {
                 label = variable_map.front().at(decl->id).address;
             } else {
-                label = get_label();
+                label = get_global_label();
                 variable_map.front().insert({decl->id, VariableInfo(label, false)});
             }
 
@@ -529,6 +529,11 @@ void GeneratorVisitor::visit(UnaryOperator* op)
 std::string GeneratorVisitor::get_label()
 {
     return "_label" + std::to_string(label_counter++);
+}
+
+std::string GeneratorVisitor::get_global_label()
+{
+    return "_glabel" + std::to_string(label_counter++);
 }
 
 VariableInfo GeneratorVisitor::get_variable_info(std::string var_name)

@@ -12,6 +12,7 @@ public:
     BasicBlock();
 
     bool is_code_block();
+    std::string get_label();
 
     std::vector<Instruction*> instructions;
     std::vector<std::string> lines;

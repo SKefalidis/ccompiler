@@ -63,12 +63,5 @@ std::vector<BasicBlock*> BlockGenerator::get_blocks()
         }
     }
 
-//    for (auto& b : blocks) {
-//        std::cout << "Basic Block:" << std::endl;
-//        for (auto& i : b->instructions) {
-//            std::cout << i->to_string() << std::endl;
-//        }
-//    }
-
     return blocks;
 }

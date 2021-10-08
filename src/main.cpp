@@ -11,6 +11,7 @@
 #include "functiondeclarationvisitor.h"
 #include "blockgenerator.h"
 #include "peepholeoptimizer.h"
+#include "controlflowgraph.h"
 #include "node.h"
 
 using namespace std;
@@ -49,8 +50,33 @@ int main(int argc, char** argv)
     input.close();
     input.open("./assembly.s");
     BlockGenerator blocker(input);
+    auto blocks = blocker.get_blocks();
+
+//    for (auto& b : blocks) {
+//        if (b->is_code_block()) {
+//            std::cout << "Basic Block:" << std::endl;
+//            for (auto& i : b->instructions) {
+//                std::cout << i->to_string() << std::endl;
+//            }
+//        }
+//    }
+
+    ControlFlowGraph grapher(blocks);
+    blocks = grapher.remove_dead_blocks();
+
+//    std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
+
+//    for (auto& b : grapher.remove_dead_blocks()) {
+//        if (b->is_code_block()) {
+//            std::cout << "Basic Block:" << std::endl;
+//            for (auto& i : b->instructions) {
+//                std::cout << i->to_string() << std::endl;
+//            }
+//        }
+//    }
+
     PeepholeOptimizer peeophole_optimizer;
-    auto blocks = peeophole_optimizer.optimize(blocker.get_blocks());
+    peeophole_optimizer.optimize(blocks);
     input.close();
 
 //    std::cout << "Optimized" << std::endl;

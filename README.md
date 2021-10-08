@@ -5,6 +5,10 @@ Current additional features include:
 - Support for prefix `++` and `--` operators.
 - Support for `+=,` `-=`, `*=`, `/=` and `%=` operators.
 
+Additionally a number of optimizations are applied to the final assembly code:
+- Dead code elimination
+- Various peephole optimizations
+
 ## Grammar:
 
 ```
@@ -62,3 +66,9 @@ Current additional features include:
                     |   "~"
                     |   "-"
 ```
+
+## TODO:
+
+- Loop unrolling
+- Preprocessor
+- Improved compilation speed
